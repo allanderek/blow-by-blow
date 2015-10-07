@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- following meta is needed by Persona -->
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<title>Blow-by-blow</title>
+{% block page_css %}
+{% endblock %}
+</head>
+<body>
+
+<div id="main_menu">
+    <ul>
+        <li><a href="{{ url_for('frontpage') }}">Welcome</a></li>
+    </ul>
+</div>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+{% block content %}
+{% endblock %}
+{% block page_scripts %}
+{% endblock %}
+</body>
+</html>
