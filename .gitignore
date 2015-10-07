@@ -17,3 +17,5 @@ app/static/compiled-js/
 
 node_modules/
 npm-debug.log
+
+dump.rdb
