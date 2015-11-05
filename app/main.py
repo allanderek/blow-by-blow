@@ -82,6 +82,13 @@ def redirect_url(default='frontpage'):
 def frontpage():
     return flask.render_template('frontpage.html')
 
+@application.route('/current')
+def current_feeds():
+    query = database.session.query(DBFeed)
+    db_feeds = query.all() # Turns into a list, might be better to iter.
+    return flask.render_template('current_feeds.html',
+                                 db_feeds=db_feeds)
+
 # Create a bbb-feed
 @application.route('/startfeed')
 def start_feed():
@@ -110,7 +117,7 @@ def write_feed(feed_no, author_secret):
 @application.route('/viewfeed/<int:feed_no>')
 def view_feed(feed_no):
     db_feed = database.session.query(DBFeed).filter_by(id=feed_no).one()
-    return flask.render_template('view_feed.html', feed_no=feed_no)
+    return flask.render_template('view_feed.html', db_feed=db_feed)
 
 
 def event_stream():
@@ -150,7 +157,6 @@ def commentate_on_feed(feed_no, secret):
         return flask.redirect(redirect_url())
     flask.flash("Commentate form not validated.")
     return flask.redirect(redirect_url())
-    
 
 # Show a list of current/recent bbb-events
 

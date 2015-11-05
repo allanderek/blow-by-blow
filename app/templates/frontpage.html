@@ -2,10 +2,18 @@
 {% block content %}
 <h1>Blow-by-Blow</h1>
 
+<p>
 Welcome to blow-by-blow. Here we assist your live-text commentary on
 any and all events.
+</p>
 
+<p>
 If you would like you can
 <a href="{{url_for('start_feed')}}">start a feed</a>.
+</p>
 
+<p>
+Or you could <a href="{{url_for('current_feeds')}}">
+view the list of current feeds</a>
+</p>
 {% endblock %}
