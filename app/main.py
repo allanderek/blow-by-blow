@@ -143,7 +143,8 @@ def commentate_on_feed(feed_no, secret):
     form = CommentateForm()
     if form.validate_on_submit():
         now = datetime.datetime.now().replace(microsecond=0).time()
-        message = u'[{0}]: {1}'.format(now.isoformat(), "I am the night") # form.comment_text.data)
+        message = u'[{0}]: {1}'.format(now.isoformat(),
+                                       form.comment_text.data)
         redis_protocol.publish('chat', message)
         database.session.commit()
         return flask.redirect(redirect_url())

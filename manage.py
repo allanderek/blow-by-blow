@@ -10,7 +10,6 @@ migrate = Migrate(application, database)
 manager = Manager(application)
 manager.add_command('db', MigrateCommand)
 
-
 def run_command(command):
     """ We frequently inspect the return result of a command so this is just
         a utility function to do this. Generally we call this as:
@@ -19,6 +18,10 @@ def run_command(command):
     result = os.system(command)
     return 0 if result == 0 else 1
 
+@manager.command
+def debugrun():
+    # We require threaded here otherwise our event stream gets stuck.
+    return run_command('python manage.py runserver --debug --threaded')
 
 @manager.command
 def coffeelint():
@@ -96,7 +99,7 @@ def run_test_server():
     application.DEBUG = True
     application.TESTING = True
     port = application.config['LIVE_SERVER_PORT']
-    application.run(port=port, use_reloader=False)
+    application.run(port=port, use_reloader=False, threaded=True)
 
 if __name__ == "__main__":
     manager.run()
