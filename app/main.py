@@ -121,17 +121,17 @@ def view_feed(feed_no):
     return flask.render_template('view_feed.html', db_feed=db_feed)
 
 
-def event_stream():
+def event_stream(channel):
     pubsub = redis_protocol.pubsub()
-    pubsub.subscribe('chat')
+    pubsub.subscribe(channel)
     # TODO: handle client disconnection.
     for message in pubsub.listen():
         print(message)
         yield 'data: %s\n\n' % message['data']
 
-@application.route('/stream')
-def stream():
-    return flask.Response(event_stream(),
+@application.route('/stream/<int:channel>')
+def stream(channel):
+    return flask.Response(event_stream(channel),
                           mimetype="text/event-stream")
 
 
@@ -157,7 +157,8 @@ def commentate_on_feed(feed_no, secret):
         now = datetime.datetime.now().replace(microsecond=0).time()
         message = u'[{0}]: {1}'.format(now.isoformat(),
                                        form.comment_text.data)
-        redis_protocol.publish('chat', message)
+        channel = db_feed.id
+        redis_protocol.publish(channel, message)
 
         moment = DBMoment(db_feed.id, message)
         database.session.add(moment)
