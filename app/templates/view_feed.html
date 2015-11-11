@@ -3,7 +3,9 @@
 <h1>{{db_feed.id}}</h1>
 
 <ul>
-    <li>Here should be the output I guess.</li>
+    {% for moment in db_feed.moments %}
+        <li>{{moment.content}}</li>
+    {% endfor %}
 </ul>
 <pre id="out"></pre>
 

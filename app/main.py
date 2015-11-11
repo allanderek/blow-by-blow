@@ -53,7 +53,8 @@ class DBMoment(database.Model):
     feed_id = database.Column(database.Integer,
                               database.ForeignKey('feeds.id'))
 
-    def __init__(self, content):
+    def __init__(self, feed_id, content):
+        self.feed_id = feed_id
         self.content = content
 
 def create_database_feed():
@@ -149,16 +150,22 @@ def commentate_on_feed(feed_no, secret):
         return flask.redirect(redirect_url())
     form = CommentateForm()
     if form.validate_on_submit():
+        # Ultimately we should just publish the comment id or something
+        # like that, and then we can have the javascript which handles
+        # the stream on the user end grab the appropriate comment,
+        # but we'll see, maybe aye, maybe naw.
         now = datetime.datetime.now().replace(microsecond=0).time()
         message = u'[{0}]: {1}'.format(now.isoformat(),
                                        form.comment_text.data)
         redis_protocol.publish('chat', message)
+
+        moment = DBMoment(db_feed.id, message)
+        database.session.add(moment)
         database.session.commit()
         return flask.redirect(redirect_url())
     flask.flash("Commentate form not validated.")
     return flask.redirect(redirect_url())
 
-# Show a list of current/recent bbb-events
 
 # Allow viewing a single bbb-event (although we will want to be able
 # to combine bbb-events so that a user can monitor several).
