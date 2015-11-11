@@ -2,7 +2,7 @@
 {% block content %}
 <h1>{{db_feed.id}}</h1>
 
-<ul>
+<ul id="feed-moment-list">
     {% for moment in db_feed.moments %}
         <li>{{moment.content}}</li>
     {% endfor %}
@@ -13,10 +13,14 @@
 <script>
     function sse() {
         var source = new EventSource('/stream');
-        var out = document.getElementById('out');
+        var out = document.getElementById('feed-moment-list');
         source.onmessage = function(e) {
             // XSS in chat is fun
-            out.innerHTML =  e.data + '\\n' + out.innerHTML;
+            // out.innerHTML =  e.data + '\\n' + out.innerHTML;
+            var li = document.createElement('li');
+            out.appendChild(li);
+            li.innerHTML = e.data;
+
         };
     }
     sse();
