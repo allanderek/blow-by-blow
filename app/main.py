@@ -163,9 +163,6 @@ def commentate_on_feed(feed_no, secret):
 # Allow viewing a single bbb-event (although we will want to be able
 # to combine bbb-events so that a user can monitor several).
 
-# 1. we need to figure out a way for runserver to automatically have
-# --threaded.
-
 # 2. Obviously each feed should have a different channel, that should
 # be pretty easy.
 
