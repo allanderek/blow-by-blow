@@ -2,12 +2,29 @@
 {% block content %}
 <h1>{{db_feed.id}}</h1>
 
+
+{% if secret is not none %}
+    <div id="commentate-area">
+        <form id="make-comment"
+              method="POST"
+              action="{{ url_for('commentate_on_feed', feed_no=db_feed.id,
+                                 secret=secret) }}">
+                {{ commentate_form.hidden_tag() }}
+                {{ commentate_form.comment_text.label }}
+                {{ commentate_form.comment_text() }}
+                <button type="submit"
+                        class="commentate_button"
+                        name="commentate_button">Update</button>
+            </form>
+    </div>
+{% endif %}
+
+
 <ul id="feed-moment-list">
     {% for moment in db_feed.moments %}
         <li>{{moment.content}}</li>
     {% endfor %}
 </ul>
-<pre id="out"></pre>
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script>
@@ -16,7 +33,6 @@
         var out = document.getElementById('feed-moment-list');
         source.onmessage = function(e) {
             // XSS in chat is fun
-            // out.innerHTML =  e.data + '\\n' + out.innerHTML;
             var li = document.createElement('li');
             out.appendChild(li);
             li.innerHTML = e.data;

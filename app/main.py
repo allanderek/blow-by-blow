@@ -97,8 +97,8 @@ def start_feed():
     # people accidentally refreshing and starting multiple feeds, so I
     # guess I want this to only accept POST?
     db_feed = create_database_feed()
-    url = flask.url_for('write_feed', feed_no=db_feed.id,
-                        author_secret=db_feed.author_secret)
+    url = flask.url_for('view_feed', feed_no=db_feed.id,
+                        secret=db_feed.author_secret)
     return flask.redirect(url)
 
 
@@ -106,19 +106,18 @@ class CommentateForm(flask_wtf.Form):
     validators = [DataRequired()]
     comment_text = StringField("Next comment:", validators=validators)
 
-@application.route('/writefeed/<int:feed_no>/<int:author_secret>')
-def write_feed(feed_no, author_secret):
+
+@application.route('/viewfeed/<int:feed_no>')  # noqa
+@application.route('/viewfeed/<int:feed_no>/<int:secret>')
+def view_feed(feed_no, secret=None):
     db_feed = database.session.query(DBFeed).filter_by(id=feed_no).one()
+    commentate_form = None if secret is None else CommentateForm()
     # I should really be checking that the secret is correct? Although
     # that is done by 'commentate_on_feed'
-    return flask.render_template('author_feed.html', feed_no=feed_no,
-                                 secret=author_secret,
-                                 commentate_form=CommentateForm())
-
-@application.route('/viewfeed/<int:feed_no>')
-def view_feed(feed_no):
-    db_feed = database.session.query(DBFeed).filter_by(id=feed_no).one()
-    return flask.render_template('view_feed.html', db_feed=db_feed)
+    return flask.render_template('view_feed.html',
+                                 db_feed=db_feed,
+                                 secret=secret,
+                                 commentate_form=commentate_form)
 
 
 def event_stream(channel):
