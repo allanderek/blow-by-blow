@@ -40,6 +40,18 @@
         };
     }
     sse();
+
+    /* At some point we might wish to post to a feed without leaving
+    the feed page. In this case we want code similar to the below,
+    although of course the post will have to send the feed id and author
+    secret, and additionally it is not the '#in' element.
+    $('#in').keyup(function(e){
+        if (e.keyCode == 13) {
+            $.post('/post', {'message': $(this).val()});
+            $(this).val('');
+        }
+    });
+    */
 </script>
 
 
