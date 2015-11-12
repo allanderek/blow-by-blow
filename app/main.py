@@ -179,5 +179,47 @@ def commentate_on_feed(feed_no, secret):
 # 4. Obviously we need some kind of permenance to these comments so that
 # new visitors to a feed can see the previous comments.
 
+# Now for some testing.
+import flask.ext.testing
+import urllib
+from selenium import webdriver
+
+
+class MyTest(flask.ext.testing.LiveServerTestCase):
+    def create_app(self):
+        application.config['TESTING'] = True
+        # Default port is 5000
+        application.config['LIVESERVER_PORT'] = 8943
+
+        # Required so that we use the in-memory sqlite database and
+        # not the actual production database.
+        application.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
+        
+        self.driver = webdriver.PhantomJS()
+        self.driver.set_window_size(1120, 550)
+        return application
+
+    def test_server_is_up_and_running(self):
+        print(self.get_server_url())
+        response = urllib.request.urlopen(self.get_server_url())
+        self.assertEqual(response.code, 200)
+
+
+    def test_frontpage_links(self):
+        self.driver.get(self.get_server_url())
+        links = self.driver.find_elements_by_tag_name('a')
+        num_links = len(links)
+        self.assertEqual(3, num_links)
+        
+
+    def setUp(self):
+        database.create_all()
+
+    def tearDown(self):
+        self.driver.quit()
+        database.session.remove()
+        database.drop_all()
+
+
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
