@@ -161,10 +161,8 @@ import flask.ext.testing
 import urllib
 from selenium import webdriver
 
-import time
-import multiprocessing
 
-class MyTest(flask.ext.testing.LiveServerTestCase):
+class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def create_app(self):
         application.config['TESTING'] = True
         # Default port is 5000
@@ -178,6 +176,8 @@ class MyTest(flask.ext.testing.LiveServerTestCase):
         self.driver.set_window_size(1120, 550)
         return application
 
+    def get_url(self, local_url):
+        return "/".join([self.get_server_url(), local_url])
 
     def test_server_is_up_and_running(self):
         print(self.get_server_url())
@@ -191,10 +191,41 @@ class MyTest(flask.ext.testing.LiveServerTestCase):
         num_links = len(links)
         self.assertEqual(3, num_links)
 
+    def assertExistsCssSelector(self, css_selector):
+        """Asserts that element exists and returns that element"""
+        # There is no assert does not raise so this just fails with
+        # a NoSuchElementException, we could catch that and then do a
+        # self.assert(False), but for now we'll leave it at this.
+        element = self.driver.find_element_by_css_selector(css_selector)
+        return element
+
     def test_create_feed(self):
-        self.driver.get(self.get_server_url() + '/startfeed')
+        # Start a new feed.
+        self.driver.get(self.get_url('startfeed'))
         comment_input = self.driver.find_element_by_id('comment_text')
         self.assertIsNotNone(comment_input)
+        # Add a comment to that feed.
+        first_comment = 'Match has kicked off, it is raining'
+        comment_input.send_keys(first_comment)
+        comment_button = self.driver.find_element_by_id('commentate_button')
+        comment_button.click()
+        comment_selector = '#feed-moment-list li'
+        comment = self.assertExistsCssSelector(comment_selector)
+        self.assertIn(first_comment, comment.text)
+
+        # In a new window we wish to view the feed without being able
+        # to author it, we could just remove the author-secret from the
+        # current url but this seems more 'genuine'.
+        url_fields = self.driver.current_url.split('/')
+        feed_id = url_fields[url_fields.index('viewfeed') + 1]
+        # view_url = self.get_server_url() + '/viewfeed/' + feed_id
+        view_current_url = self.get_url('current')
+        script = "$(window.open('{0}'))".format(view_current_url)
+        self.driver.execute_script(script)
+        self.driver.switch_to.window(self.driver.window_handles[-1])
+        expected_feed_url = '/viewfeed/' + feed_id
+        feed_link_selector = 'a[href$="{0}"]'.format(expected_feed_url)
+        self.assertExistsCssSelector(feed_link_selector)
 
     def setUp(self):
         database.create_all()
