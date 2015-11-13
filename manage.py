@@ -19,11 +19,6 @@ def run_command(command):
     return 0 if result == 0 else 1
 
 @manager.command
-def debugrun():
-    # We require threaded here otherwise our event stream gets stuck.
-    return run_command('python manage.py runserver --debug --threaded')
-
-@manager.command
 def coffeelint():
     return run_command('coffeelint app/coffee')
 

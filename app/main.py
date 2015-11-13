@@ -11,7 +11,6 @@ from collections import namedtuple
 import unittest
 
 import datetime
-import redis
 import flask
 from flask import request, url_for
 import sqlalchemy
@@ -35,7 +34,6 @@ application = flask.Flask(__name__)
 application.config.from_object(Configuration)
 
 database = SQLAlchemy(application)
-redis_protocol = redis.StrictRedis()
 
 
 class DBFeed(database.Model):
@@ -120,20 +118,6 @@ def view_feed(feed_no, secret=None):
                                  commentate_form=commentate_form)
 
 
-def event_stream(channel):
-    pubsub = redis_protocol.pubsub()
-    pubsub.subscribe(channel)
-    # TODO: handle client disconnection.
-    for message in pubsub.listen():
-        print(message)
-        yield 'data: %s\n\n' % message['data']
-
-@application.route('/stream/<int:channel>')
-def stream(channel):
-    return flask.Response(event_stream(channel),
-                          mimetype="text/event-stream")
-
-
 @application.route('/commentate/<int:feed_no>/<int:secret>',
                    methods=['POST'])
 def commentate_on_feed(feed_no, secret):
@@ -149,16 +133,9 @@ def commentate_on_feed(feed_no, secret):
         return flask.redirect(redirect_url())
     form = CommentateForm()
     if form.validate_on_submit():
-        # Ultimately we should just publish the comment id or something
-        # like that, and then we can have the javascript which handles
-        # the stream on the user end grab the appropriate comment,
-        # but we'll see, maybe aye, maybe naw.
         now = datetime.datetime.now().replace(microsecond=0).time()
-        message = u'[{0}]: {1}'.format(now.isoformat(),
-                                       form.comment_text.data)
-        channel = db_feed.id
-        redis_protocol.publish(channel, message)
-
+        message = '[{0}]: {1}'.format(now.isoformat(),
+                                      form.comment_text.data)
         moment = DBMoment(db_feed.id, message)
         database.session.add(moment)
         database.session.commit()
@@ -184,6 +161,8 @@ import flask.ext.testing
 import urllib
 from selenium import webdriver
 
+import time
+import multiprocessing
 
 class MyTest(flask.ext.testing.LiveServerTestCase):
     def create_app(self):
@@ -191,13 +170,14 @@ class MyTest(flask.ext.testing.LiveServerTestCase):
         # Default port is 5000
         application.config['LIVESERVER_PORT'] = 8943
 
-        # Required so that we use the in-memory sqlite database and
-        # not the actual production database.
-        application.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
+        # Don't use the production database but a temporary test
+        # database.
+        application.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///test.db"
         
         self.driver = webdriver.PhantomJS()
         self.driver.set_window_size(1120, 550)
         return application
+
 
     def test_server_is_up_and_running(self):
         print(self.get_server_url())
@@ -210,10 +190,15 @@ class MyTest(flask.ext.testing.LiveServerTestCase):
         links = self.driver.find_elements_by_tag_name('a')
         num_links = len(links)
         self.assertEqual(3, num_links)
-        
+
+    def test_create_feed(self):
+        self.driver.get(self.get_server_url() + '/startfeed')
+        comment_input = self.driver.find_element_by_id('comment_text')
+        self.assertIsNotNone(comment_input)
 
     def setUp(self):
         database.create_all()
+        database.session.commit()
 
     def tearDown(self):
         self.driver.quit()

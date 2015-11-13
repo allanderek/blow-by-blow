@@ -28,29 +28,9 @@
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script>
-    function sse() {
-        var source = new EventSource('/stream/{{db_feed.id}}');
-        var out = document.getElementById('feed-moment-list');
-        source.onmessage = function(e) {
-            // XSS in chat is fun
-            var li = document.createElement('li');
-            out.appendChild(li);
-            li.innerHTML = e.data;
-
-        };
-    }
-    sse();
-
-    /* At some point we might wish to post to a feed without leaving
-    the feed page. In this case we want code similar to the below,
-    although of course the post will have to send the feed id and author
-    secret, and additionally it is not the '#in' element.
-    $('#in').keyup(function(e){
-        if (e.keyCode == 13) {
-            $.post('/post', {'message': $(this).val()});
-            $(this).val('');
-        }
-    });
+    /* We have now stopped using server-side events and we're just
+       going to instead use some ajax to automatically re-load the
+       event-stream.
     */
 </script>
 
