@@ -160,6 +160,7 @@ def commentate_on_feed(feed_no, secret):
 import flask.ext.testing
 import urllib
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 
 
 class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
@@ -199,6 +200,13 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         element = self.driver.find_element_by_css_selector(css_selector)
         return element
 
+    def assertCssSelectorNotExists(self, css_selector):
+        """ Asserts that no element that matches the given css selector
+        is present."""
+        with self.assertRaises(NoSuchElementException):
+            self.driver.find_element_by_css_selector(css_selector)
+
+
     def test_create_feed(self):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
@@ -207,7 +215,8 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # Add a comment to that feed.
         first_comment = 'Match has kicked off, it is raining'
         comment_input.send_keys(first_comment)
-        comment_button = self.driver.find_element_by_id('commentate_button')
+        button_id = 'commentate_button'
+        comment_button = self.driver.find_element_by_id(button_id)
         comment_button.click()
         comment_selector = '#feed-moment-list li'
         comment = self.assertExistsCssSelector(comment_selector)
@@ -225,7 +234,11 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.driver.switch_to.window(self.driver.window_handles[-1])
         expected_feed_url = '/viewfeed/' + feed_id
         feed_link_selector = 'a[href$="{0}"]'.format(expected_feed_url)
-        self.assertExistsCssSelector(feed_link_selector)
+        feed_link = self.assertExistsCssSelector(feed_link_selector)
+        feed_link.click()
+        expected_comment = 'ul li'
+        self.assertExistsCssSelector(expected_comment)
+        self.assertCssSelectorNotExists('#' + button_id)
 
     def setUp(self):
         database.create_all()
