@@ -50,6 +50,8 @@ class DBMoment(database.Model):
     content = database.Column(database.String(2400))
     feed_id = database.Column(database.Integer,
                               database.ForeignKey('feeds.id'))
+    date_time = database.Column(database.DateTime(timezone=False),
+                                default=datetime.datetime.utcnow)
 
     def __init__(self, feed_id, content):
         self.feed_id = feed_id
@@ -133,10 +135,7 @@ def commentate_on_feed(feed_no, secret):
         return flask.redirect(redirect_url())
     form = CommentateForm()
     if form.validate_on_submit():
-        now = datetime.datetime.now().replace(microsecond=0).time()
-        message = '[{0}]: {1}'.format(now.isoformat(),
-                                      form.comment_text.data)
-        moment = DBMoment(db_feed.id, message)
+        moment = DBMoment(db_feed.id, form.comment_text.data)
         database.session.add(moment)
         database.session.commit()
         return flask.redirect(redirect_url())
@@ -181,7 +180,6 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         return "/".join([self.get_server_url(), local_url])
 
     def test_server_is_up_and_running(self):
-        print(self.get_server_url())
         response = urllib.request.urlopen(self.get_server_url())
         self.assertEqual(response.code, 200)
 
@@ -206,6 +204,11 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         with self.assertRaises(NoSuchElementException):
             self.driver.find_element_by_css_selector(css_selector)
 
+    def check_comment_exists(self, comment):
+        selector = '#feed-moment-list li .comment-text'
+        comments = self.driver.find_elements_by_css_selector(selector)
+        comment_texts = (element.text for element in comments)
+        self.assertIn(comment, comment_texts)
 
     def test_create_feed(self):
         # Start a new feed.
@@ -218,9 +221,8 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         button_id = 'commentate_button'
         comment_button = self.driver.find_element_by_id(button_id)
         comment_button.click()
-        comment_selector = '#feed-moment-list li'
-        comment = self.assertExistsCssSelector(comment_selector)
-        self.assertIn(first_comment, comment.text)
+        comment_selector = '#feed-moment-list li .comment-text'
+        self.check_comment_exists(first_comment)
 
         # In a new window we wish to view the feed without being able
         # to author it, we could just remove the author-secret from the
@@ -236,9 +238,9 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         feed_link_selector = 'a[href$="{0}"]'.format(expected_feed_url)
         feed_link = self.assertExistsCssSelector(feed_link_selector)
         feed_link.click()
-        expected_comment = 'ul li'
-        self.assertExistsCssSelector(expected_comment)
+        self.assertExistsCssSelector(comment_selector)
         self.assertCssSelectorNotExists('#' + button_id)
+        self.check_comment_exists(first_comment)
 
     def setUp(self):
         database.create_all()
@@ -248,6 +250,8 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.driver.quit()
         database.session.remove()
         database.drop_all()
+
+# TODO: Write a test to specifically check for XSS errors.
 
 
 if __name__ == "__main__":

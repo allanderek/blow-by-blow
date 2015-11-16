@@ -23,7 +23,8 @@
 
 <ul id="feed-moment-list">
     {% for moment in db_feed.moments %}
-        <li>{{moment.content}}</li>
+        <li><span class="comment-time">{{moment.date_time.isoformat()}}</span>
+            <span class="comment-text">{{moment.content}}</span></li>
     {% endfor %}
 </ul>
 
