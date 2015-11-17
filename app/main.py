@@ -41,6 +41,8 @@ class DBFeed(database.Model):
     id = database.Column(database.Integer, primary_key=True)
     author_secret = database.Column(database.Integer)
     moments = database.relationship('DBMoment')
+    feed_title = database.Column(database.String(2400),
+                                 default='My Event')
 
     def __init__(self):
         self.author_secret = random.getrandbits(48)
@@ -102,6 +104,11 @@ def start_feed():
     return flask.redirect(url)
 
 
+class ChangeTitleForm(flask_wtf.Form):
+    validators = [DataRequired()]
+    title_text = StringField("New Title:", validators=validators)
+
+
 class CommentateForm(flask_wtf.Form):
     validators = [DataRequired()]
     comment_text = StringField("Next comment:", validators=validators)
@@ -111,13 +118,42 @@ class CommentateForm(flask_wtf.Form):
 @application.route('/viewfeed/<int:feed_no>/<int:secret>')
 def view_feed(feed_no, secret=None):
     db_feed = database.session.query(DBFeed).filter_by(id=feed_no).one()
+    if secret is None:
+        change_title_form = None
+        commentate_form = None
+    else:
+        change_title_form = ChangeTitleForm()
+        commentate_form = CommentateForm()
     commentate_form = None if secret is None else CommentateForm()
     # I should really be checking that the secret is correct? Although
     # that is done by 'commentate_on_feed'
     return flask.render_template('view_feed.html',
                                  db_feed=db_feed,
                                  secret=secret,
+                                 change_title_form=change_title_form,
                                  commentate_form=commentate_form)
+
+
+@application.route('/commentate/<int:feed_no>/<int:secret>',
+                   methods=['POST'])
+def change_feed_title(feed_no, secret):
+    try:
+        query = database.session.query(DBFeed)
+        db_feed = query.filter_by(id=feed_no).one()
+    except SQLAlchemyError:
+        flask.flash("Feed number: {0} not found!".format(feed_no))
+        return flask.redirect(redirect_url())
+    if db_feed.author_secret != secret:
+        msg = 'You do not have the correct secret to post to this feed'
+        flask.flash(msg)
+        return flask.redirect(redirect_url())
+    form = ChangeTitleForm()
+    if form.validate_on_submit():
+        db_feed.feed_title = form.title_text.data
+        database.session.commit()
+        return flask.redirect(redirect_url())
+    flask.flash("Commentate form not validated.")
+    return flask.redirect(redirect_url())
 
 
 @application.route('/commentate/<int:feed_no>/<int:secret>',
@@ -213,6 +249,10 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def test_create_feed(self):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
+
+        # Give the feed a title
+        # title_input = 
+        
         comment_input = self.driver.find_element_by_id('comment_text')
         self.assertIsNotNone(comment_input)
         # Add a comment to that feed.

@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>{{db_feed.id}}</h1>
+<h1>
+    {{db_feed.feed_title}}
+</h1>
+    {% if secret is not none %}
+    <form id='change-title' method="POST"
+          action="{{ url_for('change_feed_title',
+                             feed_no=db_feed.id,
+                             secret=secret) }}">
+        {{ change_title_form.hidden_tag() }}
+        {{ change_title_form.title_text.label }}
+        {{ change_title_form.title_text() }}
+    </form>
+    {% endif %}
 
 
 {% if secret is not none %}
