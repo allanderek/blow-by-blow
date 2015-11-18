@@ -18,8 +18,8 @@ import sqlalchemy.orm
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 import flask_wtf
-from wtforms import HiddenField, IntegerField, StringField
-from wtforms.validators import DataRequired, Email
+import wtforms
+
 
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -104,39 +104,27 @@ def start_feed():
     return flask.redirect(url)
 
 
-class ChangeTitleForm(flask_wtf.Form):
-    validators = [DataRequired()]
-    title_text = StringField("New Title:", validators=validators)
-
-
-class CommentateForm(flask_wtf.Form):
-    validators = [DataRequired()]
-    comment_text = StringField("Next comment:", validators=validators)
+class UpdateFeedForm(flask_wtf.Form):
+    title_text = wtforms.StringField("New Title:")
+    comment_text = wtforms.TextAreaField("Next comment: ")
 
 
 @application.route('/viewfeed/<int:feed_no>')  # noqa
 @application.route('/viewfeed/<int:feed_no>/<int:secret>')
 def view_feed(feed_no, secret=None):
     db_feed = database.session.query(DBFeed).filter_by(id=feed_no).one()
-    if secret is None:
-        change_title_form = None
-        commentate_form = None
-    else:
-        change_title_form = ChangeTitleForm()
-        commentate_form = CommentateForm()
-    commentate_form = None if secret is None else CommentateForm()
+    update_feed_form = None if secret is None else UpdateFeedForm()
     # I should really be checking that the secret is correct? Although
     # that is done by 'commentate_on_feed'
     return flask.render_template('view_feed.html',
                                  db_feed=db_feed,
                                  secret=secret,
-                                 change_title_form=change_title_form,
-                                 commentate_form=commentate_form)
+                                 update_feed_form=update_feed_form)
 
 
-@application.route('/changetitle/<int:feed_no>/<int:secret>',
+@application.route('/update_feed/<int:feed_no>/<int:secret>',
                    methods=['POST'])
-def change_feed_title(feed_no, secret):
+def update_feed(feed_no, secret):
     try:
         query = database.session.query(DBFeed)
         db_feed = query.filter_by(id=feed_no).one()
@@ -147,37 +135,23 @@ def change_feed_title(feed_no, secret):
         msg = 'You do not have the correct secret to post to this feed'
         flask.flash(msg)
         return flask.redirect(redirect_url())
-    form = ChangeTitleForm()
-    if form.validate_on_submit():
-        db_feed.feed_title = form.title_text.data
-        database.session.commit()
+    form = UpdateFeedForm()
+    if not form.validate_on_submit():
+        flask.flash("Change title form not validated.")
         return flask.redirect(redirect_url())
-    flask.flash("Change title form not validated.")
-    return flask.redirect(redirect_url())
 
-
-@application.route('/commentate/<int:feed_no>/<int:secret>',
-                   methods=['POST'])
-def commentate_on_feed(feed_no, secret):
-    try:
-        query = database.session.query(DBFeed)
-        db_feed = query.filter_by(id=feed_no).one()
-    except SQLAlchemyError:
-        flask.flash("Feed number: {0} not found!".format(feed_no))
-        return flask.redirect(redirect_url())
-    if db_feed.author_secret != secret:
-        msg = 'You do not have the correct secret to post to this feed'
-        flask.flash(msg)
-        return flask.redirect(redirect_url())
-    form = CommentateForm()
-    if form.validate_on_submit():
-        moment = DBMoment(db_feed.id, form.comment_text.data)
+    # If we get here then it should only be because we have a valid
+    # update to the feed. Note that we could check to see if *all* of
+    # these entries are empty and if so issue a warning/error.
+    new_title = form.title_text.data.lstrip()
+    comment = form.comment_text.data.lstrip()
+    if new_title:
+        db_feed.feed_title = new_title
+    if comment:
+        moment = DBMoment(db_feed.id, comment)
         database.session.add(moment)
-        database.session.commit()
-        return flask.redirect(redirect_url())
-    flask.flash("Commentate form not validated.")
+    database.session.commit()
     return flask.redirect(redirect_url())
-
 
 # Allow viewing a single bbb-event (although we will want to be able
 # to combine bbb-events so that a user can monitor several).

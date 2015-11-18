@@ -5,12 +5,12 @@
 </span>
     {% if secret is not none %}
     <form id='change-title' method="POST"
-          action="{{ url_for('change_feed_title',
+          action="{{ url_for('update_feed',
                              feed_no=db_feed.id,
                              secret=secret) }}">
-        {{ change_title_form.hidden_tag() }}
-        {{ change_title_form.title_text.label }}
-        {{ change_title_form.title_text() }}
+        {{ update_feed_form.hidden_tag() }}
+        {{ update_feed_form.title_text.label }}
+        {{ update_feed_form.title_text() }}
         <button type="submit"
                 class="change-title-button"
                 id="update-title-button"
@@ -23,11 +23,11 @@
     <div id="commentate-area">
         <form id="make-comment"
               method="POST"
-              action="{{ url_for('commentate_on_feed', feed_no=db_feed.id,
+              action="{{ url_for('update_feed', feed_no=db_feed.id,
                                  secret=secret) }}">
-                {{ commentate_form.hidden_tag() }}
-                {{ commentate_form.comment_text.label }}
-                {{ commentate_form.comment_text() }}
+                {{ update_feed_form.hidden_tag() }}
+                {{ update_feed_form.comment_text.label }}
+                {{ update_feed_form.comment_text() }}
                 <button type="submit"
                         class="commentate_button"
                         id="commentate_button"
