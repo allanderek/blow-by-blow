@@ -134,7 +134,7 @@ def view_feed(feed_no, secret=None):
                                  commentate_form=commentate_form)
 
 
-@application.route('/commentate/<int:feed_no>/<int:secret>',
+@application.route('/changetitle/<int:feed_no>/<int:secret>',
                    methods=['POST'])
 def change_feed_title(feed_no, secret):
     try:
@@ -152,7 +152,7 @@ def change_feed_title(feed_no, secret):
         db_feed.feed_title = form.title_text.data
         database.session.commit()
         return flask.redirect(redirect_url())
-    flask.flash("Commentate form not validated.")
+    flask.flash("Change title form not validated.")
     return flask.redirect(redirect_url())
 
 
