@@ -30,6 +30,7 @@ class Configuration(object):
     LIVE_SERVER_PORT = 5000
     database_file = os.path.join(basedir, '../../db.sqlite')
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + database_file
+    DOMAIN = 'localhost'
 application = flask.Flask(__name__)
 application.config.from_object(Configuration)
 
@@ -46,6 +47,11 @@ class DBFeed(database.Model):
 
     def __init__(self):
         self.author_secret = random.getrandbits(48)
+
+    @property
+    def viewers_link(self):
+        path = url_for('view_feed', feed_no=self.id)
+        return application.config['DOMAIN'] + path
 
 class DBMoment(database.Model):
     id = database.Column(database.Integer, primary_key=True)
@@ -156,14 +162,8 @@ def update_feed(feed_no, secret):
 # Allow viewing a single bbb-event (although we will want to be able
 # to combine bbb-events so that a user can monitor several).
 
-# 2. Obviously each feed should have a different channel, that should
-# be pretty easy.
-
 # 3. Posting should not make you leave the current page but simply
 # post the new comment.
-
-# 4. Obviously we need some kind of permenance to these comments so that
-# new visitors to a feed can see the previous comments.
 
 # Now for some testing.
 import flask.ext.testing
@@ -200,6 +200,14 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         num_links = len(links)
         self.assertEqual(3, num_links)
 
+    def assertCssSelectorExists(self, css_selector):
+        """ Asserts that there is an element that matches the given
+        css selector."""
+        try:
+            self.driver.find_element_by_css_selector(css_selector)
+        except NoSuchElementException:
+            self.assertTrue(False)
+
     def assertCssSelectorNotExists(self, css_selector):
         """ Asserts that no element that matches the given css selector
         is present."""
@@ -224,6 +232,9 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def test_create_feed(self):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
+
+        send_viewers_div_css = '#send-viewers-link'
+        self.assertCssSelectorExists(send_viewers_div_css)
 
         # Give the feed a title
         title_input = self.driver.find_element_by_id('title_text')
@@ -255,6 +266,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         expected_feed_url = '/viewfeed/' + feed_id
         feed_link_selector = 'a[href$="{0}"]'.format(expected_feed_url)
         self.click_element_with_css(feed_link_selector)
+        self.assertCssSelectorNotExists(send_viewers_div_css)
         self.assertCssSelectorNotExists(update_title_button_css)
         self.assertCssSelectorNotExists(commentate_button_css)
         self.check_feed_title(title)

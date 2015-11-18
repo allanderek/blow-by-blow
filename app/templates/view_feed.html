@@ -1,4 +1,18 @@
 {% extends "base.html" %}
+{% block page_css %}
+<style>
+.feed-title {
+    font-size: 3rem;
+    color: blue;
+}
+.comment-time{
+    color: orange;
+}
+.comment-text{
+    color: blue;
+}
+</style>
+{% endblock %}
 {% block content %}
 <span class='feed-title'>
     {{db_feed.feed_title}}
@@ -17,6 +31,15 @@
                 name="update-title-button">Update</button>
     </form>
     {% endif %}
+    
+{% if secret is not none %}
+<div id="send-viewers-link">
+    Do not send people the link in your address bar, that is your
+    private link to author the feed. Send viewers here:
+    <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
+</div>
+{% endif %}
+
 
 
 {% if secret is not none %}
