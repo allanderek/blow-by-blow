@@ -226,14 +226,6 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         num_links = len(links)
         self.assertEqual(3, num_links)
 
-    def assertExistsCssSelector(self, css_selector):
-        """Asserts that element exists and returns that element"""
-        # There is no assert does not raise so this just fails with
-        # a NoSuchElementException, we could catch that and then do a
-        # self.assert(False), but for now we'll leave it at this.
-        element = self.driver.find_element_by_css_selector(css_selector)
-        return element
-
     def assertCssSelectorNotExists(self, css_selector):
         """ Asserts that no element that matches the given css selector
         is present."""
@@ -246,22 +238,34 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         comment_texts = (element.text for element in comments)
         self.assertIn(comment, comment_texts)
 
+    def check_feed_title(self, title):
+        selector = '.feed-title'
+        title_element = self.driver.find_element_by_css_selector(selector)
+        self.assertEqual(title, title_element.text)
+
+    def click_element_with_css(self, selector):
+        element = self.driver.find_element_by_css_selector(selector)
+        element.click()
+
     def test_create_feed(self):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
 
         # Give the feed a title
-        # title_input = 
+        title_input = self.driver.find_element_by_id('title_text')
+        title = 'Red Team vs Blue Team'
+        title_input.send_keys(title)
+        update_title_button_css = '#update-title-button'
+        self.click_element_with_css(update_title_button_css)
+        self.check_feed_title(title)
         
         comment_input = self.driver.find_element_by_id('comment_text')
         self.assertIsNotNone(comment_input)
         # Add a comment to that feed.
         first_comment = 'Match has kicked off, it is raining'
         comment_input.send_keys(first_comment)
-        button_id = 'commentate_button'
-        comment_button = self.driver.find_element_by_id(button_id)
-        comment_button.click()
-        comment_selector = '#feed-moment-list li .comment-text'
+        commentate_button_css = '#commentate_button'
+        self.click_element_with_css(commentate_button_css)
         self.check_comment_exists(first_comment)
 
         # In a new window we wish to view the feed without being able
@@ -276,10 +280,10 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.driver.switch_to.window(self.driver.window_handles[-1])
         expected_feed_url = '/viewfeed/' + feed_id
         feed_link_selector = 'a[href$="{0}"]'.format(expected_feed_url)
-        feed_link = self.assertExistsCssSelector(feed_link_selector)
-        feed_link.click()
-        self.assertExistsCssSelector(comment_selector)
-        self.assertCssSelectorNotExists('#' + button_id)
+        self.click_element_with_css(feed_link_selector)
+        self.assertCssSelectorNotExists(update_title_button_css)
+        self.assertCssSelectorNotExists(commentate_button_css)
+        self.check_feed_title(title)
         self.check_comment_exists(first_comment)
 
     def setUp(self):

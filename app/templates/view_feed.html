@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>
+<span class='feed-title'>
     {{db_feed.feed_title}}
-</h1>
+</span>
     {% if secret is not none %}
     <form id='change-title' method="POST"
           action="{{ url_for('change_feed_title',
@@ -11,6 +11,10 @@
         {{ change_title_form.hidden_tag() }}
         {{ change_title_form.title_text.label }}
         {{ change_title_form.title_text() }}
+        <button type="submit"
+                class="change-title-button"
+                id="update-title-button"
+                name="update-title-button">Update</button>
     </form>
     {% endif %}
 
