@@ -4,14 +4,36 @@
 <!-- following meta is needed by Persona -->
 <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 <title>Blow-by-blow</title>
+<style>
+* {
+    margin: 0 auto;
+}
+
+h1{
+    color: blue;
+}
+#main_menu ul li{
+    display: inline;
+}
+
+body {
+    font: 18px/26px Helvetica, Sans-Serif;
+}
+
+.main-column{
+    max-width: 600px;
+}
+
+</style>
 {% block page_css %}
 {% endblock %}
 </head>
 <body>
 
-<div id="main_menu">
+<div id="main_menu" class="main-column">
     <ul>
         <li><a href="{{ url_for('frontpage') }}">Welcome</a></li>
+        <li><a href="{{ url_for('current_feeds')}}">Current Feeds</a></li>
     </ul>
 </div>
 

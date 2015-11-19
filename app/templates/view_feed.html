@@ -1,23 +1,42 @@
 {% extends "base.html" %}
 {% block page_css %}
 <style>
+#feed-contents{
+
+}
+
 .feed-title {
+    text-align: center;
     font-size: 3rem;
     color: blue;
+    padding: 10px;
+    padding-bottom: 15px;
 }
+
+.feed-moment{
+    list-style-type: none;
+    border: 1px solid #6AC5AC;
+}
+
 .comment-time{
     color: orange;
 }
 .comment-text{
+    padding-left: 1em;
     color: blue;
 }
 </style>
 {% endblock %}
 {% block content %}
-<span class='feed-title'>
+
+<div id="feed-contents" class="main-column">
+<div class='main-column feed-title'>
     {{db_feed.feed_title}}
-</span>
-    {% if secret is not none %}
+</div>
+
+
+{% if secret is not none %}
+<div id="update-controls" class="main-column">
     <form id='change-title' method="POST"
           action="{{ url_for('update_feed',
                              feed_no=db_feed.id,
@@ -30,14 +49,13 @@
                 id="update-title-button"
                 name="update-title-button">Update</button>
     </form>
-    {% endif %}
     
-{% if secret is not none %}
-<div id="send-viewers-link">
-    Do not send people the link in your address bar, that is your
-    private link to author the feed. Send viewers here:
-    <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
-</div>
+    <div id="send-viewers-link">
+        Do not send people the link in your address bar, that is your
+        private link to author the feed. Send viewers here:
+        <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
+    </div>
+</div><!-- End of update-controls -->
 {% endif %}
 
 
@@ -62,10 +80,14 @@
 
 <ul id="feed-moment-list">
     {% for moment in db_feed.moments %}
-        <li><span class="comment-time">{{moment.date_time.isoformat()}}</span>
-            <span class="comment-text">{{moment.content}}</span></li>
+        <li class="feed-moment">
+            <div class="comment-time">{{moment.date_time.isoformat()}}</div>
+            <div class="comment-text">{{moment.content}}</div>
+            </li>
     {% endfor %}
 </ul>
+
+</div><!-- End of div feed-contents -->
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script>
