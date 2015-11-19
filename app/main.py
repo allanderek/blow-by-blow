@@ -189,17 +189,6 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def get_url(self, local_url):
         return "/".join([self.get_server_url(), local_url])
 
-    def test_server_is_up_and_running(self):
-        response = urllib.request.urlopen(self.get_server_url())
-        self.assertEqual(response.code, 200)
-
-
-    def test_frontpage_links(self):
-        self.driver.get(self.get_server_url())
-        links = self.driver.find_elements_by_tag_name('a')
-        num_links = len(links)
-        self.assertEqual(3, num_links)
-
     def assertCssSelectorExists(self, css_selector):
         """ Asserts that there is an element that matches the given
         css selector."""
@@ -271,6 +260,17 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.assertCssSelectorNotExists(commentate_button_css)
         self.check_feed_title(title)
         self.check_comment_exists(first_comment)
+
+    def test_server_is_up_and_running(self):
+        response = urllib.request.urlopen(self.get_server_url())
+        self.assertEqual(response.code, 200)
+
+    def test_frontpage_links(self):
+        """ Just make sure we can go to the front page and that
+        the main menu is there and has at least one item."""
+        self.driver.get(self.get_server_url())
+        main_menu_css = '#main_menu ul li'
+        self.assertCssSelectorExists(main_menu_css)
 
     def setUp(self):
         database.create_all()
