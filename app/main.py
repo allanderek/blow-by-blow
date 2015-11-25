@@ -214,9 +214,18 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         title_element = self.driver.find_element_by_css_selector(selector)
         self.assertEqual(title, title_element.text)
 
+    def check_description(self, description):
+        selector = '.feed-description'
+        desc_element = self.driver.find_element_by(selector)
+        self.assertEqual(description, desc_element)
+
     def click_element_with_css(self, selector):
         element = self.driver.find_element_by_css_selector(selector)
         element.click()
+
+    def fill_in_text_input_by_id(self, input_id, input_text):
+        input_element = self.driver.find_element_by_id(input_id)
+        input_element.send_keys(input_text)
 
     def test_create_feed(self):
         # Start a new feed.
@@ -226,13 +235,17 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.assertCssSelectorExists(send_viewers_div_css)
 
         # Give the feed a title
-        title_input = self.driver.find_element_by_id('title_text')
         title = 'Red Team vs Blue Team'
-        title_input.send_keys(title)
+        self.fill_in_text_input_by_id('title_text', title)
         update_title_button_css = '#update-title-button'
         self.click_element_with_css(update_title_button_css)
         self.check_feed_title(title)
-        
+
+        # Give the feed a description
+        description_text = "My commentary on the Red vs Blue match."
+        # self.fill_in_text_input_by_id('description_text',
+        #                              description_text)
+
         comment_input = self.driver.find_element_by_id('comment_text')
         self.assertIsNotNone(comment_input)
         # Add a comment to that feed.
