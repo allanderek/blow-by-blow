@@ -44,6 +44,8 @@ class DBFeed(database.Model):
     moments = database.relationship('DBMoment')
     feed_title = database.Column(database.String(2400),
                                  default='My Event')
+    feed_desc = database.Column(database.String(2400),
+                                default="Description of this feed.")
 
     def __init__(self):
         self.author_secret = random.getrandbits(48)
@@ -112,6 +114,7 @@ def start_feed():
 
 class UpdateFeedForm(flask_wtf.Form):
     title_text = wtforms.StringField("New Title:")
+    desc_text = wtforms.TextAreaField("Description: ")
     comment_text = wtforms.TextAreaField("Next comment: ")
 
 
@@ -150,9 +153,12 @@ def update_feed(feed_no, secret):
     # update to the feed. Note that we could check to see if *all* of
     # these entries are empty and if so issue a warning/error.
     new_title = form.title_text.data.lstrip()
+    new_description = form.desc_text.data.lstrip()
     comment = form.comment_text.data.lstrip()
     if new_title:
         db_feed.feed_title = new_title
+    if new_description:
+        db_feed.feed_desc = new_description
     if comment:
         moment = DBMoment(db_feed.id, comment)
         database.session.add(moment)
@@ -214,10 +220,10 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         title_element = self.driver.find_element_by_css_selector(selector)
         self.assertEqual(title, title_element.text)
 
-    def check_description(self, description):
+    def check_feed_description(self, description):
         selector = '.feed-description'
-        desc_element = self.driver.find_element_by(selector)
-        self.assertEqual(description, desc_element)
+        desc_element = self.driver.find_element_by_css_selector(selector)
+        self.assertEqual(description, desc_element.text)
 
     def click_element_with_css(self, selector):
         element = self.driver.find_element_by_css_selector(selector)
@@ -237,20 +243,23 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # Give the feed a title
         title = 'Red Team vs Blue Team'
         self.fill_in_text_input_by_id('title_text', title)
-        update_title_button_css = '#update-title-button'
-        self.click_element_with_css(update_title_button_css)
+        update_header_button_css = '#update-feed-header-button'
+        self.click_element_with_css(update_header_button_css)
         self.check_feed_title(title)
 
-        # Give the feed a description
+        # Give the feed a description, note that we could fill in
+        # both the title and the description and *then* click update,
+        # but we're doing it as two separate POSTs.
         description_text = "My commentary on the Red vs Blue match."
-        # self.fill_in_text_input_by_id('description_text',
-        #                              description_text)
+        self.fill_in_text_input_by_id('desc_text',
+                                      description_text)
+        self.click_element_with_css(update_header_button_css)
+        self.check_feed_description(description_text)
 
-        comment_input = self.driver.find_element_by_id('comment_text')
-        self.assertIsNotNone(comment_input)
         # Add a comment to that feed.
         first_comment = 'Match has kicked off, it is raining'
-        comment_input.send_keys(first_comment)
+        self.fill_in_text_input_by_id('comment_text',
+                                      first_comment)
         commentate_button_css = '#commentate_button'
         self.click_element_with_css(commentate_button_css)
         self.check_comment_exists(first_comment)
@@ -269,9 +278,10 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         feed_link_selector = 'a[href$="{0}"]'.format(expected_feed_url)
         self.click_element_with_css(feed_link_selector)
         self.assertCssSelectorNotExists(send_viewers_div_css)
-        self.assertCssSelectorNotExists(update_title_button_css)
+        self.assertCssSelectorNotExists(update_header_button_css)
         self.assertCssSelectorNotExists(commentate_button_css)
         self.check_feed_title(title)
+        self.check_feed_description(description_text)
         self.check_comment_exists(first_comment)
 
     def test_server_is_up_and_running(self):
