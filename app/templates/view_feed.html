@@ -87,11 +87,11 @@
               action="{{ url_for('update_feed', feed_no=db_feed.id,
                                  secret=secret) }}">
                 {{ update_feed_form.hidden_tag() }}
-                {{ update_feed_form.comment_text() }}
+                {{ update_feed_form.comment_text(placeholder="New update comment:") }}
                 <button type="submit"
                         class="commentate_button"
                         id="commentate_button"
-                        name="commentate_button">Update</button>
+                        name="commentate_button">Commentate</button>
             </form>
     </div>
 {% endif %}
