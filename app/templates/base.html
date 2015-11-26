@@ -5,6 +5,14 @@
 <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 <title>Blow-by-blow</title>
 <style>
+/* Make sure we use the more intuitive boxing model, though keep in
+   mind this is IE8+
+ */
+* {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
 * {
     margin: 0 auto;
 }

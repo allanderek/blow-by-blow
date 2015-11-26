@@ -1,11 +1,9 @@
 {% extends "base.html" %}
 {% block page_css %}
 <style>
-#feed-contents{
-
-}
-
-.feed-title {
+#feed-moment-list{
+    list-style: none;
+    padding-left: 0;
 }
 
 .feed-moment{
@@ -20,11 +18,39 @@
     padding-left: 1em;
     color: blue;
 }
+
+#send-viewers-link{
+    border: 1px solid red;
+}
+
+
+
+.author-update input,
+.author-update textarea{
+  padding: 10px;
+  border: solid 5px #c9c9c9;
+  transition: border 0.3s;
+  width: 100%;
+}
+
+.author-update input:focus,
+.author-update textarea:focus{
+  border: solid 5px #6AC5AC;
+}
 </style>
 {% endblock %}
 {% block content %}
 
 <div id="feed-contents" class="main-column">
+
+{% if secret is not none %}
+<div id="send-viewers-link">
+        Do not send people the link in your address bar, that is your
+        private link to author the feed. Send viewers here:
+        <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
+    </div>
+{% endif %}
+
 <div class="main-column page-title feed-title">
     {{db_feed.feed_title}}
 </div>
@@ -34,10 +60,9 @@
     {% endif %}
 </div>
 
-
 {% if secret is not none %}
 <div id="update-controls" class="main-column">
-    <form id='change-title' method="POST"
+    <form id='update-feed' class="author-update" method="POST"
           action="{{ url_for('update_feed',
                              feed_no=db_feed.id,
                              secret=secret) }}">
@@ -51,24 +76,17 @@
                 id="update-feed-header-button"
                 name="update-feed-header-button">Update</button>
     </form>
-    
-    <div id="send-viewers-link">
-        Do not send people the link in your address bar, that is your
-        private link to author the feed. Send viewers here:
-        <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
-    </div>
 </div><!-- End of update-controls -->
 {% endif %}
 
 
 {% if secret is not none %}
     <div id="commentate-area">
-        <form id="make-comment"
+        <form id="make-comment" class="author-update"
               method="POST"
               action="{{ url_for('update_feed', feed_no=db_feed.id,
                                  secret=secret) }}">
                 {{ update_feed_form.hidden_tag() }}
-                {{ update_feed_form.comment_text.label }}
                 {{ update_feed_form.comment_text() }}
                 <button type="submit"
                         class="commentate_button"

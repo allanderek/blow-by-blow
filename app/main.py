@@ -114,8 +114,8 @@ def start_feed():
 
 class UpdateFeedForm(flask_wtf.Form):
     title_text = wtforms.StringField("New Title:")
-    desc_text = wtforms.TextAreaField("Description: ")
-    comment_text = wtforms.TextAreaField("Next comment: ")
+    desc_text = wtforms.TextAreaField("Description:")
+    comment_text = wtforms.TextAreaField("Next comment:")
 
 
 @application.route('/viewfeed/<int:feed_no>')  # noqa
