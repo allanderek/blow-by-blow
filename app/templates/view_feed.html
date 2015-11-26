@@ -67,10 +67,8 @@
                              feed_no=db_feed.id,
                              secret=secret) }}">
         {{ update_feed_form.hidden_tag() }}
-        {{ update_feed_form.title_text.label }}
-        {{ update_feed_form.title_text() }}
-        {{ update_feed_form.desc_text.label }}
-        {{ update_feed_form.desc_text() }}
+        {{ update_feed_form.title_text(placeholder="New Title") }}
+        {{ update_feed_form.desc_text(placeholder="New Sticky Description") }}
         <button type="submit"
                 class="update-feed-header-button"
                 id="update-feed-header-button"
