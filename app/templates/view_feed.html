@@ -29,7 +29,9 @@
     {{db_feed.feed_title}}
 </div>
 <div class="main-column feed-description">
-    {{db_feed.feed_desc}}
+    {% if db_feed.feed_desc %}
+        {{db_feed.feed_desc}}
+    {% endif %}
 </div>
 
 
