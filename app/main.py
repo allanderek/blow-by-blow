@@ -225,12 +225,17 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         desc_element = self.driver.find_element_by_css_selector(selector)
         self.assertEqual(description, desc_element.text)
 
+    def fill_in_and_submit_form(self, fields, submit):
+        for field_css, field_text in fields:
+            self.fill_in_text_input_by_css(field_css, field_text)
+        self.click_element_with_css(submit)
+
     def click_element_with_css(self, selector):
         element = self.driver.find_element_by_css_selector(selector)
         element.click()
 
-    def fill_in_text_input_by_id(self, input_id, input_text):
-        input_element = self.driver.find_element_by_id(input_id)
+    def fill_in_text_input_by_css(self, input_css, input_text):
+        input_element = self.driver.find_element_by_css_selector(input_css)
         input_element.send_keys(input_text)
 
     def test_create_feed(self):
@@ -242,26 +247,24 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 
         # Give the feed a title
         title = 'Red Team vs Blue Team'
-        self.fill_in_text_input_by_id('title_text', title)
         update_header_button_css = '#update-feed-header-button'
-        self.click_element_with_css(update_header_button_css)
+        self.fill_in_and_submit_form([('#title_text', title)],
+                                     update_header_button_css)
         self.check_feed_title(title)
 
         # Give the feed a description, note that we could fill in
         # both the title and the description and *then* click update,
         # but we're doing it as two separate POSTs.
         description_text = "My commentary on the Red vs Blue match."
-        self.fill_in_text_input_by_id('desc_text',
-                                      description_text)
-        self.click_element_with_css(update_header_button_css)
+        self.fill_in_and_submit_form([('#desc_text', description_text)],
+                                      update_header_button_css)
         self.check_feed_description(description_text)
 
         # Add a comment to that feed.
         first_comment = 'Match has kicked off, it is raining'
-        self.fill_in_text_input_by_id('comment_text',
-                                      first_comment)
         commentate_button_css = '#commentate_button'
-        self.click_element_with_css(commentate_button_css)
+        self.fill_in_and_submit_form([('#comment_text', first_comment)],
+                                     commentate_button_css)
         self.check_comment_exists(first_comment)
 
         # In a new window we wish to view the feed without being able
