@@ -47,6 +47,7 @@
 <div id="feed-contents" class="main-column">
 
 <script>
+var earliest_first = true;
 function refresh_feed(feed_id) {
     $("#refreshing-feed").show();
     $.post('/grabmoments', {
@@ -68,7 +69,11 @@ function refresh_feed(feed_id) {
 	  text_div.innerHTML = moment['content'];
           moment_li.appendChild(time_div);
 	  moment_li.appendChild(text_div);
-          $("#feed-moment-list").append(moment_li);
+	  if (earliest_first){
+              $("#feed-moment-list").prepend(moment_li);
+          } else {
+              $("#feed-moment-list").append(moment_li);
+          }
 	}
         $("#refreshing-feed").hide();
     }).fail(function() {
@@ -80,6 +85,10 @@ jQuery(document).ready(function(){
     jQuery('#dismiss-send-viewers-link').live('click', function(event) {
        jQuery('#send-viewers-link').toggle('show');
        });
+    jQuery('#toggle-feed-direction').live('click', function(event){
+       earliest_first = !earliest_first;
+       refresh_feed({{db_feed.id}});
+    });
     refresh_feed({{db_feed.id}});
 });
 </script>
@@ -171,6 +180,8 @@ jQuery(document).ready(function(){
 Feed is refreshing
 </div>
 <a href="javascript:refresh_feed('{{ db_feed.id }}');">Refresh Feed</a>
+
+<button id="toggle-feed-direction">Toggle Direction</button>
 
 <ul id="feed-moment-list">
 </ul>
