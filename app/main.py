@@ -12,7 +12,7 @@ import unittest
 
 import datetime
 import flask
-from flask import request, url_for
+from flask import request, url_for, jsonify
 import sqlalchemy
 import sqlalchemy.orm
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -55,6 +55,11 @@ class DBFeed(database.Model):
         path = url_for('view_feed', feed_no=self.id)
         return application.config['DOMAIN'] + path
 
+    def jsonify(self):
+        return jsonify({'title': self.feed_title,
+                        'description': self.feed_desc,
+                        'moments': [moment.jsonify() for moment in self.moments]})
+
 class DBMoment(database.Model):
     id = database.Column(database.Integer, primary_key=True)
     content = database.Column(database.String(2400))
@@ -66,6 +71,10 @@ class DBMoment(database.Model):
     def __init__(self, feed_id, content):
         self.feed_id = feed_id
         self.content = content
+
+    def jsonify(self):
+        return {'time': self.date_time.isoformat(),
+                'content': self.content}
 
 def create_database_feed():
     """ Create a feed in the database. """
@@ -87,6 +96,13 @@ def redirect_url(default='frontpage'):
     """
 
     return request.args.get('next') or request.referrer or url_for(default)
+
+
+@application.route('/grabmoments', methods=['POST'])
+def grab_moments():
+    feed_id = request.form['feed_id']
+    db_feed = database.session.query(DBFeed).filter_by(id=feed_id).one()
+    return db_feed.jsonify()
 
 
 @application.route("/")
@@ -187,7 +203,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # Don't use the production database but a temporary test
         # database.
         application.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///test.db"
-        
+
         self.driver = webdriver.PhantomJS()
         self.driver.set_window_size(1120, 550)
         return application

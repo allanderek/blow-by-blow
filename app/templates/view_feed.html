@@ -41,17 +41,48 @@
 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
 
-<script>
-jQuery(document).ready(function(){
-    jQuery('#dismiss-send-viewers-link').live('click', function(event) {        
-         jQuery('#send-viewers-link').toggle('show');
-    });
-});
-</script>
 {% endblock %}
 {% block content %}
 
 <div id="feed-contents" class="main-column">
+
+<script>
+function refresh_feed(feed_id) {
+    $("#refreshing-feed").show();
+    $.post('/grabmoments', {
+        feed_id: feed_id
+    }).done(function(translated) {
+        $(".feed-title").text(translated['title']);
+        $(".feed-description").text(translated['description']);
+        $(".feed-moment").remove();
+        var moments = translated['moments'];
+        for (i = 0; i < moments.length; i++) {
+          moment = moments[i];
+	  moment_li = document.createElement('li');
+	  moment_li.className = "feed-moment";
+          time_div = document.createElement('div');
+	  time_div.className = "comment-time";
+          time_div.innerHTML = moment['time']
+          text_div = document.createElement('div');
+          text_div.className = "comment-text";
+	  text_div.innerHTML = moment['content'];
+          moment_li.appendChild(time_div);
+	  moment_li.appendChild(text_div);
+          $("#feed-moment-list").append(moment_li);
+	}
+        $("#refreshing-feed").hide();
+    }).fail(function() {
+        $("#refreshing-feed").text("Error: Could not contact server.");
+    });
+}
+
+jQuery(document).ready(function(){
+    jQuery('#dismiss-send-viewers-link').live('click', function(event) {
+       jQuery('#send-viewers-link').toggle('show');
+       });
+    refresh_feed({{db_feed.id}});
+});
+</script>
 
 {% if secret is not none %}
 <div id="send-viewers-link" class="author-instructions">
@@ -80,7 +111,7 @@ jQuery(document).ready(function(){
     course open up additional browser windows or tabs.
     </p>
     <p>
-    tl;dr: 
+    tl;dr:
         Do not send people the link in your address bar, that is your
         private link to author the feed. Send viewers here:
         <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
@@ -136,24 +167,16 @@ jQuery(document).ready(function(){
 {% endif %}
 
 
+<div id="refreshing-feed">
+Feed is refreshing
+</div>
+<a href="javascript:refresh_feed('{{ db_feed.id }}');">Refresh Feed</a>
+
 <ul id="feed-moment-list">
-    {% for moment in db_feed.moments %}
-        <li class="feed-moment">
-            <div class="comment-time">{{moment.date_time.isoformat()}}</div>
-            <div class="comment-text">{{moment.content}}</div>
-            </li>
-    {% endfor %}
 </ul>
 
 </div><!-- End of div feed-contents -->
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script>
-    /* We have now stopped using server-side events and we're just
-       going to instead use some ajax to automatically re-load the
-       event-stream.
-    */
-</script>
-
 
 {% endblock %}
