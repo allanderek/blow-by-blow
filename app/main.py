@@ -181,11 +181,6 @@ def update_feed(feed_no, secret):
     database.session.commit()
     return flask.redirect(redirect_url())
 
-# Allow viewing a single bbb-event (although we will want to be able
-# to combine bbb-events so that a user can monitor several).
-
-# 3. Posting should not make you leave the current page but simply
-# post the new comment.
 
 # Now for some testing.
 import flask.ext.testing
@@ -328,8 +323,18 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         database.session.remove()
         database.drop_all()
 
+# A lightweight way to write down a few simple todos. Of course using the
+# issue tracker is the better way to do this, this is just a lightweight
+# solution for relatively *obvious* defects/todos.
+
+# TODO: Feedback form
+
+# TODO: Posting should not make you leave the current page but simply
+# post the new comment.
+
 # TODO: Write a test to specifically check for XSS errors.
 
+# TODO: CSS themes.
 
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
