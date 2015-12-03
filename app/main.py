@@ -4,17 +4,9 @@
    feeds.
 """
 
-from enum import IntEnum
 import random
-from collections import namedtuple
-
-import unittest
-
 import datetime
 import flask
-from flask import request, url_for, jsonify
-import sqlalchemy
-import sqlalchemy.orm
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 import flask_wtf
@@ -52,13 +44,14 @@ class DBFeed(database.Model):
 
     @property
     def viewers_link(self):
-        path = url_for('view_feed', feed_no=self.id)
+        path = flask.url_for('view_feed', feed_no=self.id)
         return application.config['DOMAIN'] + path
 
     def jsonify(self):
-        return jsonify({'title': self.feed_title,
-                        'description': self.feed_desc,
-                        'moments': [moment.jsonify() for moment in self.moments]})
+        json_moments = [moment.jsonify() for moment in self.moments]
+        return flask.jsonify({'title': self.feed_title,
+                              'description': self.feed_desc,
+                              'moments': json_moments})
 
 
 class DBMoment(database.Model):
@@ -98,12 +91,13 @@ def redirect_url(default='frontpage'):
         http://stackoverflow.com/questions/14277067/redirect-back-in-flask
     """
 
-    return request.args.get('next') or request.referrer or url_for(default)
+    return (flask.request.args.get('next') or flask.request.referrer or
+            flask.url_for(default))
 
 
 @application.route('/grabmoments', methods=['POST'])
 def grab_moments():
-    feed_id = request.form['feed_id']
+    feed_id = flask.request.form['feed_id']
     db_feed = database.session.query(DBFeed).filter_by(id=feed_id).one()
     return db_feed.jsonify()
 
