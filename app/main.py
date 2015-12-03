@@ -60,6 +60,7 @@ class DBFeed(database.Model):
                         'description': self.feed_desc,
                         'moments': [moment.jsonify() for moment in self.moments]})
 
+
 class DBMoment(database.Model):
     id = database.Column(database.Integer, primary_key=True)
     content = database.Column(database.String(2400))
@@ -76,12 +77,14 @@ class DBMoment(database.Model):
         return {'time': self.date_time.isoformat(),
                 'content': self.content}
 
+
 def create_database_feed():
     """ Create a feed in the database. """
     dbfeed = DBFeed()
     database.session.add(dbfeed)
     database.session.commit()
     return dbfeed
+
 
 @application.template_test('plural')
 def is_plural(container):
@@ -109,14 +112,17 @@ def grab_moments():
 def frontpage():
     return flask.render_template('frontpage.html')
 
+
 @application.route('/current')
 def current_feeds():
     query = database.session.query(DBFeed)
-    db_feeds = query.all() # Turns into a list, might be better to iter.
+    db_feeds = query.all()  # Turns into a list, might be better to iter.
     return flask.render_template('current_feeds.html',
                                  db_feeds=db_feeds)
 
 # Create a bbb-feed
+
+
 @application.route('/startfeed')
 def start_feed():
     # TODO: The only thing about this is, that I don't really want
@@ -195,6 +201,7 @@ from selenium.common.exceptions import NoSuchElementException
 
 
 class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
+
     def create_app(self):
         application.config['TESTING'] = True
         # Default port is 5000
@@ -273,7 +280,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # but we're doing it as two separate POSTs.
         description_text = "My commentary on the Red vs Blue match."
         self.fill_in_and_submit_form([('#desc_text', description_text)],
-                                      update_header_button_css)
+                                     update_header_button_css)
         self.check_feed_description(description_text)
 
         # Add a comment to that feed.
@@ -312,7 +319,11 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         the main menu is there and has at least one item."""
         self.driver.get(self.get_server_url())
         main_menu_css = '#main_menu ul li'
+        current_feeds_link_css = main_menu_css + ' a[href$="current"]'
+        start_new_feed_link_css = main_menu_css + ' a[href$="startfeed"]'
         self.assertCssSelectorExists(main_menu_css)
+        self.assertCssSelectorExists(current_feeds_link_css)
+        self.assertCssSelectorExists(start_new_feed_link_css)
 
     def setUp(self):
         database.create_all()
