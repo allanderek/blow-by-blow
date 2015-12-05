@@ -16,7 +16,7 @@
 }
 .comment-text{
     padding-left: 1em;
-    color: blue;
+    color: #888888;
 }
 
 .author-instructions{
@@ -136,9 +136,11 @@ jQuery(document).ready(function(){
     {{db_feed.feed_title}}
 </div>
 <div class="main-column feed-description">
-    {% if db_feed.feed_desc %}
-        {{db_feed.feed_desc}}
-    {% endif %}
+  {% if db_feed.feed_desc %}
+  <p>
+    {{db_feed.feed_desc}}
+  </p>
+  {% endif %}
 </div>
 
 {% if secret is not none %}
