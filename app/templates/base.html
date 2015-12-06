@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
+
 <!-- following meta is needed by Persona -->
 <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 <title>Blow-by-blow</title>
-<style>
+
+<style class="theme-agnostic">
 /* Make sure we use the more intuitive boxing model, though keep in
    mind this is IE8+
  */
@@ -25,13 +27,8 @@ p {
 .page-title{
     text-align: center;
     font-size: 4em;
-    color: #888888;
     padding: 10px;
     padding-bottom: 15px;
-}
-
-#main_menu{
-    background-color: #888888;
 }
 
 #main_menu ul li{
@@ -46,6 +43,22 @@ body {
 }
 
 </style>
+<style class="theme-style wonderland">
+.page-title{
+  color: #888888;
+}
+#main_menu{
+  background-color: #888888;
+}
+</style>
+<style class="theme-style wind-up">
+.page-title{
+  color: #115599;
+}
+#main_menu{
+  background-color: #115599;
+}
+</style>
 {% block page_css %}
 {% endblock %}
 </head>
@@ -56,6 +69,8 @@ body {
         <li><a href="{{ url_for('frontpage') }}">Welcome</a></li>
         <li><a href="{{ url_for('current_feeds')}}">Current Feeds</a></li>
         <li><a href="{{url_for('start_feed')}}">Start a New Feed</a></li>
+        <select id="theme-selector" onchange="switch_theme(this.selectedIndex);">
+        </select> 
     </ul>
 </div>
 
@@ -71,6 +86,29 @@ body {
 
 {% block content %}
 {% endblock %}
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script>
+  var theme_names = ["wonderland", "wind-up"];
+  function switch_theme(theme_index){
+    for (i = 0; i < theme_names.length; i++) {
+      theme_name = theme_names[i];
+      var css_selector = '.theme-style.' + theme_name;
+      $(css_selector).attr("disabled", !(i == theme_index));
+    }
+  }
+
+jQuery(document).ready(function(){
+  var select = document.getElementById('theme-selector');
+  for(i = 0; i < theme_names.length; i++){
+    var option = document.createElement('option');
+    var text_node = document.createTextNode(theme_names[i]);
+    option.appendChild(text_node);
+    select.appendChild(option);
+  }
+  switch_theme(0);
+})
+</script>
 {% block page_scripts %}
 {% endblock %}
 </body>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block page_css %}
-<style>
+<style class="theme-agnostic">
 #feed-moment-list{
     list-style: none;
     padding-left: 0;
@@ -12,7 +12,6 @@
 }
 
 .comment-time{
-    color: orange;
 }
 .comment-text{
     padding-left: 1em;
@@ -38,60 +37,30 @@
   border: solid 5px #6AC5AC;
 }
 </style>
+<style class="theme-style wonderland">
+.comment-time{
+    color: #BBBB22;
+}
+.comment-text{
+    color: #888888;
+}
+</style>
+<style class="theme-style wind-up">
+.comment-time{
+    color: #AF2233;
+}
+.comment-text{
+    color: #115599;
+}
 
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+</style>
+
 
 {% endblock %}
 {% block content %}
 
 <div id="feed-contents" class="main-column">
 
-<script>
-var earliest_first = true;
-function refresh_feed(feed_id) {
-    $("#refreshing-feed").show();
-    $.post('/grabmoments', {
-        feed_id: feed_id
-    }).done(function(translated) {
-        $(".feed-title").text(translated['title']);
-        $(".feed-description").text(translated['description']);
-        $(".feed-moment").remove();
-        var moments = translated['moments'];
-        for (i = 0; i < moments.length; i++) {
-          moment = moments[i];
-	  moment_li = document.createElement('li');
-	  moment_li.className = "feed-moment";
-          time_div = document.createElement('div');
-	  time_div.className = "comment-time";
-          time_div.innerHTML = moment['time']
-          text_div = document.createElement('div');
-          text_div.className = "comment-text";
-	  text_div.innerHTML = moment['content'];
-          moment_li.appendChild(time_div);
-	  moment_li.appendChild(text_div);
-	  if (earliest_first){
-              $("#feed-moment-list").prepend(moment_li);
-          } else {
-              $("#feed-moment-list").append(moment_li);
-          }
-	}
-        $("#refreshing-feed").hide();
-    }).fail(function() {
-        $("#refreshing-feed").text("Error: Could not contact server.");
-    });
-}
-
-jQuery(document).ready(function(){
-    jQuery('#dismiss-send-viewers-link').live('click', function(event) {
-       jQuery('#send-viewers-link').toggle('show');
-       });
-    jQuery('#toggle-feed-direction').live('click', function(event){
-       earliest_first = !earliest_first;
-       refresh_feed({{db_feed.id}});
-    });
-    refresh_feed({{db_feed.id}});
-});
-</script>
 
 {% if secret is not none %}
 <div id="send-viewers-link" class="author-instructions">
@@ -189,7 +158,52 @@ Feed is refreshing
 </ul>
 
 </div><!-- End of div feed-contents -->
+{% endblock %}
+{% block page_scripts %}
+<script>
+var earliest_first = true;
+function refresh_feed(feed_id) {
+    $("#refreshing-feed").show();
+    $.post('/grabmoments', {
+        feed_id: feed_id
+    }).done(function(translated) {
+        $(".feed-title").text(translated['title']);
+        $(".feed-description").text(translated['description']);
+        $(".feed-moment").remove();
+        var moments = translated['moments'];
+        for (i = 0; i < moments.length; i++) {
+          moment = moments[i];
+	  moment_li = document.createElement('li');
+	  moment_li.className = "feed-moment";
+          time_div = document.createElement('div');
+	  time_div.className = "comment-time";
+          time_div.innerHTML = moment['time']
+          text_div = document.createElement('div');
+          text_div.className = "comment-text";
+	  text_div.innerHTML = moment['content'];
+          moment_li.appendChild(time_div);
+	  moment_li.appendChild(text_div);
+	  if (earliest_first){
+              $("#feed-moment-list").prepend(moment_li);
+          } else {
+              $("#feed-moment-list").append(moment_li);
+          }
+	}
+        $("#refreshing-feed").hide();
+    }).fail(function() {
+        $("#refreshing-feed").text("Error: Could not contact server.");
+    });
+}
+jQuery(document).ready(function(){
+    jQuery('#dismiss-send-viewers-link').live('click', function(event) {
+       jQuery('#send-viewers-link').toggle('show');
+       });
+    jQuery('#toggle-feed-direction').live('click', function(event){
+       earliest_first = !earliest_first;
+       refresh_feed({{db_feed.id}});
+    });
+    refresh_feed({{db_feed.id}});
+});
 
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-
+</script>
 {% endblock %}
