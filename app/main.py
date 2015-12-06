@@ -330,14 +330,18 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # TODO: Feedback form
 
 # TODO: Posting should not make you leave the current page but simply
-# post the new comment.
+# post the new comment. Note however that if you have multiple authors
+# then you may in fact wish to refresh the feed when you post, so I'm not
+# entirely sure about this.
+
+# TODO: Add some instructions about multiple authors
+
+# TODO: Make the author instructions nicer styled, they look awful.
 
 # TODO: Write a test to specifically check for XSS errors.
 
-# TODO: CSS themes.
-
-# TODO: Sort out more feed back to the user when you toggle the feed direction
-# it should be stating 'earlier first' or 'latest first'.
+# TODO: More tests, specifically for refreshing the feed and toggling
+# the feed direction.
 
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
