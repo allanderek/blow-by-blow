@@ -153,8 +153,7 @@
 Feed is refreshing
 </div>
 <a href="javascript:refresh_feed('{{ db_feed.id }}');">Refresh Feed</a>
-
-<button id="toggle-feed-direction">Toggle Direction</button>
+<a href="javascript:toggle_feed_direction();">Toggle Direction</a>
 
 <ul id="feed-moment-list">
 </ul>
@@ -196,14 +195,14 @@ function refresh_feed(feed_id) {
         $("#refreshing-feed").text("Error: Could not contact server.");
     });
 }
+function toggle_feed_direction(){
+  earliest_first = !earliest_first;
+  refresh_feed({{db_feed.id}});
+}
 jQuery(document).ready(function(){
     jQuery('#dismiss-send-viewers-link').live('click', function(event) {
        jQuery('#send-viewers-link').toggle('show');
        });
-    jQuery('#toggle-feed-direction').live('click', function(event){
-       earliest_first = !earliest_first;
-       refresh_feed({{db_feed.id}});
-    });
     refresh_feed({{db_feed.id}});
 });
 
