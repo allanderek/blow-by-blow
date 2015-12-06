@@ -153,7 +153,7 @@
 Feed is refreshing
 </div>
 <a href="javascript:refresh_feed('{{ db_feed.id }}');">Refresh Feed</a>
-<a href="javascript:toggle_feed_direction();">Toggle Direction</a>
+<a id="toggle-feed-direction" href="javascript:toggle_feed_direction();">Toggle Feed Direction</a>
 
 <ul id="feed-moment-list">
 </ul>
@@ -162,7 +162,7 @@ Feed is refreshing
 {% endblock %}
 {% block page_scripts %}
 <script>
-var earliest_first = true;
+var earliest_first = false;
 function refresh_feed(feed_id) {
     $("#refreshing-feed").show();
     $.post('/grabmoments', {
@@ -185,15 +185,21 @@ function refresh_feed(feed_id) {
           moment_li.appendChild(time_div);
 	  moment_li.appendChild(text_div);
 	  if (earliest_first){
-              $("#feed-moment-list").prepend(moment_li);
-          } else {
               $("#feed-moment-list").append(moment_li);
+          } else {
+              $("#feed-moment-list").prepend(moment_li);
           }
 	}
         $("#refreshing-feed").hide();
     }).fail(function() {
         $("#refreshing-feed").text("Error: Could not contact server.");
     });
+    /* Now update the text which allows the user to toggle the feed direction */
+    var toggle_link_text = "Show earliest first";
+    if (earliest_first){
+       toggle_link_text = "Show latest first";
+    }
+    $('#toggle-feed-direction').text(toggle_link_text);
 }
 function toggle_feed_direction(){
   earliest_first = !earliest_first;
