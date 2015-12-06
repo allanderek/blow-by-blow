@@ -7,6 +7,7 @@
 import random
 import datetime
 import flask
+import flask.ext.mail
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 import flask_wtf
@@ -23,8 +24,22 @@ class Configuration(object):
     database_file = os.path.join(basedir, '../../db.sqlite')
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + database_file
     DOMAIN = 'localhost'
+
+    # email server
+    MAIL_SERVER = 'smtp.googlemail.com'
+    MAIL_PORT = 465
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    FEEDBACK_SENDER = 'tomato.plan@gmail.com'
+
+    # administrator list
+    ADMINS = ['allan.clark@gmail.com']
+
 application = flask.Flask(__name__)
 application.config.from_object(Configuration)
+application_mailer = flask.ext.mail.Mail(application)
 
 database = SQLAlchemy(application)
 
@@ -114,8 +129,6 @@ def current_feeds():
     return flask.render_template('current_feeds.html',
                                  db_feeds=db_feeds)
 
-# Create a bbb-feed
-
 
 @application.route('/startfeed')
 def start_feed():
@@ -139,12 +152,14 @@ class UpdateFeedForm(flask_wtf.Form):
 def view_feed(feed_no, secret=None):
     db_feed = database.session.query(DBFeed).filter_by(id=feed_no).one()
     update_feed_form = None if secret is None else UpdateFeedForm()
+    feedback_form = FeedbackForm()
     # I should really be checking that the secret is correct? Although
     # that is done by 'commentate_on_feed'
     return flask.render_template('view_feed.html',
                                  db_feed=db_feed,
                                  secret=secret,
-                                 update_feed_form=update_feed_form)
+                                 update_feed_form=update_feed_form,
+                                 feedback_form=feedback_form)
 
 
 @application.route('/update_feed/<int:feed_no>/<int:secret>',
@@ -162,7 +177,7 @@ def update_feed(feed_no, secret):
         return flask.redirect(redirect_url())
     form = UpdateFeedForm()
     if not form.validate_on_submit():
-        flask.flash("Change title form not validated.")
+        flask.flash("Update feed form not validated.")
         return flask.redirect(redirect_url())
 
     # If we get here then it should only be because we have a valid
@@ -181,6 +196,36 @@ def update_feed(feed_no, secret):
     database.session.commit()
     return flask.redirect(redirect_url())
 
+
+class FeedbackForm(flask_wtf.Form):
+    feedback_name = wtforms.StringField("Name:")
+    feedback_email = wtforms.StringField("Email:")
+    feedback_text = wtforms.TextAreaField("Next comment:")
+
+
+@application.route('/give_feedback', methods=['POST'])
+def give_feedback():
+    form = FeedbackForm()
+    if not form.validate_on_submit():
+        flask.flash('Feedback form has not been validated, sorry.')
+        return flask.redirect(redirect_url())
+    feedback_email = form.feedback_email.data.lstrip()
+    feedback_name = form.feedback_name.data.lstrip()
+    feedback_content = form.feedback_text.data
+
+    subject = 'Feedback for Blow-by-Blow'
+    sender = application.config['FEEDBACK_SENDER']
+    recipients = application.config['ADMINS']
+    message = flask.ext.mail.Message(subject, sender=sender,
+                                     recipients=recipients)
+    message.body = """
+    You got some feedback from the 'blow-by-blow' web application.
+    Sender's name = {0}
+    Sender's email = {1}
+    Content: {2}
+    """.format(feedback_name, feedback_email, feedback_content)
+    application_mailer.send(message)
+    return flask.redirect(redirect_url())
 
 # Now for some testing.
 import flask.ext.testing
@@ -346,6 +391,9 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # TODO: You need to change the domain depending on where you are hosted.
 # Figure out if there is someway to do this automatically at least for
 # python anywhere.
+
+# TODO: Try, or at least investigate using mailgun or even sendgrid rather
+# than gmail to send emails.
 
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
