@@ -336,5 +336,8 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 
 # TODO: CSS themes.
 
+# TODO: Sort out more feed back to the user when you toggle the feed direction
+# it should be stating 'earlier first' or 'latest first'.
+
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
