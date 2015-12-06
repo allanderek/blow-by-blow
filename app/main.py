@@ -343,5 +343,9 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # TODO: More tests, specifically for refreshing the feed and toggling
 # the feed direction.
 
+# TODO: You need to change the domain depending on where you are hosted.
+# Figure out if there is someway to do this automatically at least for
+# python anywhere.
+
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
