@@ -42,6 +42,24 @@ body {
     max-width: 600px;
 }
 
+.feedback-controls input,
+.feedback-controls textarea{
+  margin: 1em;
+  padding: 10px;
+  border: solid 5px #c9c9c9;
+  transition: border 0.3s;
+  width: 100%;
+}
+
+.feedback-controls input:focus,
+.feedback-controls textarea:focus{
+  border: solid 5px #6AC5AC;
+}
+
+.feedback-controls button{
+  margin: 1em;
+}
+
 </style>
 <style class="theme-style wonderland">
 .page-title{
@@ -82,8 +100,9 @@ body {
         <li><a href="{{ url_for('frontpage') }}">Welcome</a></li>
         <li><a href="{{ url_for('current_feeds')}}">Current Feeds</a></li>
         <li><a href="{{url_for('start_feed')}}">Start a New Feed</a></li>
-        <select id="theme-selector" onchange="switch_theme(this.selectedIndex);">
-        </select> 
+        <li><select id="theme-selector" onchange="switch_theme(this.selectedIndex);">
+        </select></li>
+        <li><a href="#feedback-area">Give Feedback</a></li>
     </ul>
 </div>
 
@@ -99,6 +118,26 @@ body {
 
 {% block content %}
 {% endblock %}
+
+<div id="feedback-area" class="main-column">
+  <h2>Feedback</h2>      
+  <p>
+    We are always happy to receive any feedback both positive and negative.
+    If you wish you can provide your name and/or email. Neither is required,
+    if you do not provide an email we will have no way to respond to your
+    comment (which you may not want anyway).
+  </p>
+  <form id="give-feedback" class="feedback-controls" method="POST"
+        action="{{ url_for('give_feedback') }}">
+    {{ feedback_form.hidden_tag() }}
+    {{ feedback_form.feedback_name(placeholder="Name: Not required") }}
+    {{ feedback_form.feedback_email(placeholder="Email: Not required, but I won't be reply.") }}
+    {{ feedback_form.feedback_text(placeholder="What do you wish to suggest/praise/complain about?") }}
+    <button type="submit" class="feedback_submit_button"
+            id="feedback_submit_button" name="feedback_submit_button">Provide Feedback</button>
+  </form>
+</div>
+
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script>

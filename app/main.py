@@ -119,7 +119,8 @@ def grab_moments():
 
 @application.route("/")
 def frontpage():
-    return flask.render_template('frontpage.html')
+    return flask.render_template('frontpage.html',
+                                 feedback_form=FeedbackForm())
 
 
 @application.route('/current')
@@ -127,7 +128,8 @@ def current_feeds():
     query = database.session.query(DBFeed)
     db_feeds = query.all()  # Turns into a list, might be better to iter.
     return flask.render_template('current_feeds.html',
-                                 db_feeds=db_feeds)
+                                 db_feeds=db_feeds,
+                                 feedback_form=FeedbackForm())
 
 
 @application.route('/startfeed')
@@ -212,7 +214,6 @@ def give_feedback():
     feedback_email = form.feedback_email.data.lstrip()
     feedback_name = form.feedback_name.data.lstrip()
     feedback_content = form.feedback_text.data
-
     subject = 'Feedback for Blow-by-Blow'
     sender = application.config['FEEDBACK_SENDER']
     recipients = application.config['ADMINS']

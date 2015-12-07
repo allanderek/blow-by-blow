@@ -16,6 +16,7 @@
 
 .author-update input,
 .author-update textarea{
+  margin: 1em;
   padding: 10px;
   border: solid 5px #c9c9c9;
   transition: border 0.3s;
@@ -25,6 +26,10 @@
 .author-update input:focus,
 .author-update textarea:focus{
   border: solid 5px #6AC5AC;
+}
+
+.author-update button{
+  margin: 1em;
 }
 </style>
 <style class="theme-style wonderland">
@@ -147,19 +152,6 @@
             </form>
     </div>
 {% endif %}
-
-<div id="feedback-area">
-  <form id="give-feedback" method="POST"
-        action="{{ url_for('give_feedback') }}">
-    {{ feedback_form.hidden_tag() }}
-    {{ feedback_form.feedback_name(placeholder="Not required") }}
-    {{ feedback_form.feedback_email(placeholder="Not required, but I won't be reply.") }}
-    {{ feedback_form.feedback_text(placeholder="What do you wish to suggest/praise/complain about?") }}
-    <button type="submit" class="feedback_submit_button"
-            id="feedback_submit_button" name="feedback_submit_button">Provide Feedback</button>
-  </form>
-</div>
-
 
 <div id="refreshing-feed">
 Feed is refreshing
