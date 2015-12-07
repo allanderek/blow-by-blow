@@ -14,6 +14,15 @@ from sqlalchemy.exc import SQLAlchemyError
 import flask_wtf
 import wtforms
 
+import threading
+
+
+def async(f):
+    def wrapper(*args, **kwargs):
+        thr = threading.Thread(target=f, args=args, kwargs=kwargs)
+        thr.start()
+    return wrapper
+
 
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -196,6 +205,7 @@ class FeedbackForm(flask_wtf.Form):
     feedback_text = wtforms.TextAreaField("Next comment:")
 
 
+@async
 def send_email_message(subject, body, recipients):
     sandbox = "sandboxadc7751e75ba41dca5e4ab88e3c13306.mailgun.org"
     url = "https://api.mailgun.net/v3/{0}/messages".format(sandbox)
