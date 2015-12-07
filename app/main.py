@@ -5,6 +5,7 @@
 """
 
 import random
+import requests
 import datetime
 import flask
 import flask.ext.mail
@@ -25,21 +26,11 @@ class Configuration(object):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + database_file
     DOMAIN = 'localhost'
 
-    # email server
-    MAIL_SERVER = 'smtp.googlemail.com'
-    MAIL_PORT = 465
-    MAIL_USE_TLS = False
-    MAIL_USE_SSL = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    FEEDBACK_SENDER = 'tomato.plan@gmail.com'
-
-    # administrator list
+    MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY')
     ADMINS = ['allan.clark@gmail.com']
 
 application = flask.Flask(__name__)
 application.config.from_object(Configuration)
-application_mailer = flask.ext.mail.Mail(application)
 
 database = SQLAlchemy(application)
 
@@ -205,6 +196,19 @@ class FeedbackForm(flask_wtf.Form):
     feedback_text = wtforms.TextAreaField("Next comment:")
 
 
+def send_email_message(subject, body, recipients):
+    sandbox = "sandboxadc7751e75ba41dca5e4ab88e3c13306.mailgun.org"
+    url = "https://api.mailgun.net/v3/{0}/messages".format(sandbox)
+    sender = "Feedback Form <mailgun@{0}>".format(sandbox)
+    api_key = application.config['MAILGUN_API_KEY']
+    return requests.post(url,
+                         auth=("api", api_key),
+                         data={"from": sender,
+                               "to": recipients,
+                               "subject": subject,
+                               "text": body})
+
+
 @application.route('/give_feedback', methods=['POST'])
 def give_feedback():
     form = FeedbackForm()
@@ -215,17 +219,14 @@ def give_feedback():
     feedback_name = form.feedback_name.data.lstrip()
     feedback_content = form.feedback_text.data
     subject = 'Feedback for Blow-by-Blow'
-    sender = application.config['FEEDBACK_SENDER']
     recipients = application.config['ADMINS']
-    message = flask.ext.mail.Message(subject, sender=sender,
-                                     recipients=recipients)
-    message.body = """
+    message_body = """
     You got some feedback from the 'blow-by-blow' web application.
     Sender's name = {0}
     Sender's email = {1}
     Content: {2}
     """.format(feedback_name, feedback_email, feedback_content)
-    application_mailer.send(message)
+    send_email_message(subject, message_body, recipients)
     return flask.redirect(redirect_url())
 
 # Now for some testing.
