@@ -8,7 +8,6 @@ import random
 import requests
 import datetime
 import flask
-import flask.ext.mail
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 import flask_wtf
