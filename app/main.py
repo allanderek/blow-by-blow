@@ -384,8 +384,6 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # issue tracker is the better way to do this, this is just a lightweight
 # solution for relatively *obvious* defects/todos.
 
-# TODO: Feedback form
-
 # TODO: Posting should not make you leave the current page but simply
 # post the new comment. Note however that if you have multiple authors
 # then you may in fact wish to refresh the feed when you post, so I'm not
@@ -404,8 +402,6 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # Figure out if there is someway to do this automatically at least for
 # python anywhere.
 
-# TODO: Try, or at least investigate using mailgun or even sendgrid rather
-# than gmail to send emails.
 
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
