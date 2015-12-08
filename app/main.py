@@ -32,7 +32,7 @@ class Configuration(object):
     LIVE_SERVER_PORT = 5000
     database_file = os.path.join(basedir, '../../db.sqlite')
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + database_file
-    DOMAIN = 'localhost'
+    DOMAIN = os.environ.get('BLOWBYBLOW_DOMAIN', 'localhost')
 
     MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY')
     ADMINS = ['allan.clark@gmail.com']
