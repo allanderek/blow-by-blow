@@ -410,16 +410,10 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 
 # TODO: Add some instructions about multiple authors
 
-# TODO: Make the author instructions nicer styled, they look awful.
-
 # TODO: Write a test to specifically check for XSS errors.
 
 # TODO: More tests, specifically for refreshing the feed and toggling
 # the feed direction.
-
-# TODO: You need to change the domain depending on where you are hosted.
-# Figure out if there is someway to do this automatically at least for
-# python anywhere.
 
 # TODO: Check the accessiblity, I suspect it is poor, at least use labels
 # for form inputs. Can we install a screen reader and see how it works?
