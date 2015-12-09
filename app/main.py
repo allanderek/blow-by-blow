@@ -330,7 +330,11 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
 
-        send_viewers_div_css = 'div.alert a.alert-link'
+        url_fields = self.driver.current_url.split('/')
+        feed_id = url_fields[url_fields.index('viewfeed') + 1]
+        expected_viewer_feed_url = '/viewfeed/' + feed_id
+        sel_template = 'div.alert a.alert-link[href$="{0}"]'
+        send_viewers_div_css = sel_template.format(expected_viewer_feed_url)
         self.assertCssSelectorExists(send_viewers_div_css)
 
         # Give the feed a title
@@ -358,15 +362,11 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # In a new window we wish to view the feed without being able
         # to author it, we could just remove the author-secret from the
         # current url but this seems more 'genuine'.
-        url_fields = self.driver.current_url.split('/')
-        feed_id = url_fields[url_fields.index('viewfeed') + 1]
-        # view_url = self.get_server_url() + '/viewfeed/' + feed_id
         view_current_url = self.get_url('current')
         script = "$(window.open('{0}'))".format(view_current_url)
         self.driver.execute_script(script)
         self.driver.switch_to.window(self.driver.window_handles[-1])
-        expected_feed_url = '/viewfeed/' + feed_id
-        feed_link_selector = 'a[href$="{0}"]'.format(expected_feed_url)
+        feed_link_selector = 'a[href$="{0}"]'.format(expected_viewer_feed_url)
         self.click_element_with_css(feed_link_selector)
         self.assertCssSelectorNotExists(send_viewers_div_css)
         self.assertCssSelectorNotExists(update_header_button_css)
