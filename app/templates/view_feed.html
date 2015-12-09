@@ -35,7 +35,7 @@
     <p>
     Presumably though you are writing this feed in order that people can
     view it. That's great. The <i>viewer</i> url for <b>this</b> feed is
-    <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>.
+    <a class="alert-link" href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>.
     Send people there, tweet, facebook, or otherwise share the viewer
     link so that people may read your event updates.
     </p>
@@ -51,12 +51,12 @@
     tl;dr:
         Do not send people the link in your address bar, that is your
         private link to author the feed. Send viewers here:
-        <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
+        <a class="alert-link" href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
     </p>
 </div><!-- /#send-viewers-link-instructions --> 
 <div class="alert alert-success alert-dismissible" role="alert">
   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-  <strong>Viewer's link: </strong><a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
+  <strong>Viewer's link: </strong><a class="alert-link" href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
 </div><!-- /.alert -->
 {% endif %}
 

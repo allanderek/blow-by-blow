@@ -98,6 +98,15 @@ def is_plural(container):
     return len(container) > 1
 
 
+@application.template_filter('flash_bootstrap_category')
+def flash_bootstrap_category(flash_category):
+    return {'success': 'success',
+            'info': 'info',
+            'warning': 'warning',
+            'error': 'danger',
+            'danger': 'danger'}.get(flash_category, 'info')
+
+
 def redirect_url(default='frontpage'):
     """ A simple helper function to redirect the user back to where they came.
 
@@ -154,8 +163,17 @@ def view_feed(feed_no, secret=None):
     db_feed = database.session.query(DBFeed).filter_by(id=feed_no).one()
     update_feed_form = None if secret is None else UpdateFeedForm()
     feedback_form = FeedbackForm()
-    # I should really be checking that the secret is correct? Although
-    # that is done by 'commentate_on_feed'
+    if secret is not None and secret != db_feed.author_secret:
+        viewers_link = flask.url_for('view_feed', feed_no=feed_no)
+        message = ("<p>You do not have the correct author secret "
+                   "to update this feed, hence you will be unable "
+                   "to make any updates including adding moments."
+                   "</p>"
+                   "<p>"
+                   'You can simply view the feed <a href="{0}">here</a> '
+                   "without any author controls."
+                   "</p>").format(viewers_link)
+        flask.flash(flask.Markup(message), 'warning')
     return flask.render_template('view_feed.html',
                                  db_feed=db_feed,
                                  secret=secret,
@@ -170,15 +188,15 @@ def update_feed(feed_no, secret):
         query = database.session.query(DBFeed)
         db_feed = query.filter_by(id=feed_no).one()
     except SQLAlchemyError:
-        flask.flash("Feed number: {0} not found!".format(feed_no))
+        flask.flash("Feed number: {0} not found!".format(feed_no), 'error')
         return flask.redirect(redirect_url())
     if db_feed.author_secret != secret:
-        msg = 'You do not have the correct secret to post to this feed'
-        flask.flash(msg)
+        msg = '<strong>Update Failed:</strong> Incorrect secret!'
+        flask.flash(flask.Markup(msg), 'error')
         return flask.redirect(redirect_url())
     form = UpdateFeedForm()
     if not form.validate_on_submit():
-        flask.flash("Update feed form not validated.")
+        flask.flash("Update feed form not validated.", 'error')
         return flask.redirect(redirect_url())
 
     # If we get here then it should only be because we have a valid
@@ -222,7 +240,9 @@ def send_email_message(subject, body, recipients):
 def give_feedback():
     form = FeedbackForm()
     if not form.validate_on_submit():
-        flask.flash('Feedback form has not been validated, sorry.')
+        message = ('Feedback form has not been validated.'
+                   'Sorry it was probably my fault')
+        flask.flash(message, 'error')
         return flask.redirect(redirect_url())
     feedback_email = form.feedback_email.data.lstrip()
     feedback_name = form.feedback_name.data.lstrip()
