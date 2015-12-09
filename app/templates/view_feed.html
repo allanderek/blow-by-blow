@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block page_css %}
 <style class="theme-agnostic">
+#send-viewers-link-instructions,
+#send-viewers-link{
+  text-align: left;
+}
 .feed-moment{
     margin: 1em;
     border: 1px solid #6AC5AC;
@@ -54,10 +58,10 @@
         <a class="alert-link" href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
     </p>
 </div><!-- /#send-viewers-link-instructions --> 
-<div class="alert alert-success alert-dismissible" role="alert">
+<div id="send-viewers-link" class="alert alert-success alert-dismissible" role="alert">
   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
   <strong>Viewer's link: </strong><a class="alert-link" href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
-</div><!-- /.alert -->
+</div><!-- /#send-viewers-link -->
 {% endif %}
 
 <h1 id="feed-title">{{db_feed.feed_title}}</h1>
@@ -112,8 +116,13 @@
 <div id="refreshing-feed">
 Feed is refreshing
 </div>
-<a href="javascript:refresh_feed('{{ db_feed.id }}');">Refresh Feed</a>
-<a id="toggle-feed-direction" href="javascript:toggle_feed_direction();">Toggle Feed Direction</a>
+<button onclick="javascript:refresh_feed('{{ db_feed.id }}');"
+        class="btn btn-default"
+        id="refresh-feed-button">Refresh Feed</button>
+<button onclick="javascript:toggle_feed_direction();"
+        class="btn btn-default"
+        id="feed-direction-button">Toggle Feed Direction</button>
+
 
 <ul id="feed-moment-list" class="list-group">
 </ul>
@@ -154,11 +163,11 @@ function refresh_feed(feed_id) {
         $("#refreshing-feed").text("Error: Could not contact server.");
     });
     /* Now update the text which allows the user to toggle the feed direction */
-    var toggle_link_text = "Show earliest first";
+    var toggle_button_text = "Show earliest first";
     if (earliest_first){
-       toggle_link_text = "Show latest first";
+       toggle_button_text = "Show latest first";
     }
-    $('#toggle-feed-direction').text(toggle_link_text);
+    $('#feed-direction-button').text(toggle_button_text);
 }
 function toggle_feed_direction(){
   earliest_first = !earliest_first;
