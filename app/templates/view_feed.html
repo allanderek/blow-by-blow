@@ -20,7 +20,9 @@
 {% block lead_content %}
 
 {% if secret is not none %}
-<div id="send-viewers-link" class="author-instructions">
+<div id="send-viewers-link-instructions"
+     class="alert alert-warning alert-dismissible">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <p>
     We do not need you to sign up for some kind of <i>account</i> before
     you can author a feed. However, we of course do not want anyone else
@@ -51,11 +53,11 @@
         private link to author the feed. Send viewers here:
         <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
     </p>
-<button id="dismiss-send-viewers-link" class="dismiss">Dismiss</button>
-</div>
-<div id="viewer-link" class="author-instructions">
-   Viewers link: <a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
-</div>
+</div><!-- /#send-viewers-link-instructions --> 
+<div class="alert alert-success alert-dismissible" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <strong>Viewer's link: </strong><a href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
+</div><!-- /.alert -->
 {% endif %}
 
 <h1>{{db_feed.feed_title}}</h1>
