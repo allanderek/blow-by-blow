@@ -1,15 +1,18 @@
 {% extends "base.html" %}
-{% block content %}
+{% set active_page = "frontpage" %}
+{% block lead_content %}
 
-<div id="main-contents" class="main-column">
+<h1>Welcome to Blow-by-Blow</h1>
 
-<div class="main-column page-title">
-    Blow-by-Blow
-</div>
-
-<p>
+<p class="lead">
 Welcome to blow-by-blow. Here we assist your live-text commentary on
-any and all events. We like live-text commentary, traditional news
+any and all events.
+</p>
+{% endblock %}
+
+{% block main_content %}
+<p>
+We like live-text commentary, traditional news
 outlets have something of a monopoly on live-text commentary. Others
 can take to twitter, but tend to annoy followers who aren't interested
 in that particular event. In addition, perhaps twitter does not always
@@ -46,6 +49,4 @@ If you would like you can
 Or you could <a href="{{url_for('current_feeds')}}">
 view the list of current feeds</a>
 </p>
-
-</div> <!-- End of main-contents -->
 {% endblock %}

@@ -1,12 +1,16 @@
 {% extends "base.html" %}
-{% block content %}
+{% set active_page = "current_feeds" %}
+{% block lead_content %}
 
-<div id="main-contents" class="main-column">
+<h1>Current Feeds</h1>
 
-<div class="main-column page-title">
-    Current Feeds
-</div>
+<p>
+Here are the latest feeds for your perusal.
+</p>
 
+{% endblock %}
+
+{% block main_content %}
 <ul>
     {% for feed in db_feeds %}
     <li>
@@ -15,6 +19,6 @@
     </li>
     {% endfor %}
 </ul>
-</div> <!-- End of main-contents -->
+
 
 {% endblock %}

@@ -401,6 +401,5 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # Figure out if there is someway to do this automatically at least for
 # python anywhere.
 
-
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)

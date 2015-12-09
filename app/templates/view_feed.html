@@ -1,73 +1,15 @@
 {% extends "base.html" %}
 {% block page_css %}
 <style class="theme-agnostic">
-#feed-moment-list{
-    list-style: none;
-    padding-left: 0;
-}
-
-.feed-moment{
-    list-style-type: none;
-}
-
-.author-instructions{
-    border: 5px solid red;
-}
-
-.author-update input,
-.author-update textarea{
-  margin: 1em;
-  padding: 10px;
-  border: solid 5px #c9c9c9;
-  transition: border 0.3s;
-  width: 100%;
-}
-
-.author-update input:focus,
-.author-update textarea:focus{
-  border: solid 5px #6AC5AC;
-}
-
-.author-update button{
-  margin: 1em;
-}
 </style>
 <style class="theme-style wonderland">
-.feed-moment{
-    margin: 0.5em;
-    border: 1px solid #6AC5AC;
-}
-.comment-time{
-    color: #BBBB22;
-}
-.comment-text{
-    color: #888888;
-    padding-left: 1em;
-}
 </style>
-
 <style class="theme-style wind-up">
-.feed-moment{
-    margin: 1em;
-    border: 1px solid #6AC5AC;
-    border-radius: 15px;
-}
-.comment-time{
-    color: #AF2233;
-    padding-left: 0.5em;
-}
-.comment-text{
-    color: #115599;
-    padding-left: 2em;
-}
 </style>
 
 
 {% endblock %}
-{% block content %}
-
-<div id="feed-contents" class="main-column">
-
+{% block lead_content %}
 
 {% if secret is not none %}
 <div id="send-viewers-link" class="author-instructions">
@@ -108,16 +50,10 @@
 </div>
 {% endif %}
 
-<div class="main-column page-title feed-title">
-    {{db_feed.feed_title}}
-</div>
-<div class="main-column feed-description">
+<h1>{{db_feed.feed_title}}</h1>
   {% if db_feed.feed_desc %}
-  <p>
-    {{db_feed.feed_desc}}
-  </p>
+    <p class="lead">{{db_feed.feed_desc}}</p>
   {% endif %}
-</div>
 
 {% if secret is not none %}
 <div id="update-controls" class="main-column">
@@ -153,6 +89,9 @@
     </div>
 {% endif %}
 
+{% endblock %} <!-- lead_content -->
+
+{% block main_content %}
 <div id="refreshing-feed">
 Feed is refreshing
 </div>
@@ -162,8 +101,7 @@ Feed is refreshing
 <ul id="feed-moment-list">
 </ul>
 
-</div><!-- End of div feed-contents -->
-{% endblock %}
+{% endblock %} <!-- main_contents -->
 {% block page_scripts %}
 <script>
 var earliest_first = false;
@@ -209,12 +147,9 @@ function toggle_feed_direction(){
   earliest_first = !earliest_first;
   refresh_feed({{db_feed.id}});
 }
-jQuery(document).ready(function(){
-    jQuery('#dismiss-send-viewers-link').live('click', function(event) {
-       jQuery('#send-viewers-link').toggle('show');
-       });
-    refresh_feed({{db_feed.id}});
-});
 
+jQuery(document).ready(function(){
+  refresh_feed({{db_feed.id}});
+});
 </script>
-{% endblock %}
+{% endblock %} <!-- page_scripts -->

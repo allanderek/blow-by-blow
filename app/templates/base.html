@@ -1,166 +1,103 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
-<!-- following meta is needed by Persona -->
-<meta http-equiv="X-UA-Compatible" content="IE=Edge">
-<title>Blow-by-blow</title>
+    <!-- Bootstrap Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <title>Blow-by-blow</title>
 
 <style class="theme-agnostic">
-/* Make sure we use the more intuitive boxing model, though keep in
-   mind this is IE8+
- */
-* {
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
-}
-* {
-    margin: 0 auto;
-}
-
-p {
-   padding: 10px;
-   text-indent: 2em;
-}
-
-.page-title{
-    text-align: center;
-    font-size: 4em;
-    padding: 10px;
-    padding-bottom: 15px;
-}
-
-#main_menu ul li{
-    display: inline;
-}
-
 body {
+  padding-top: 50px;
 }
-
-.main-column{
-    max-width: 600px;
+.lead-content {
+  padding: 40px 15px;
+  text-align: center;
 }
-
-.feedback-controls input,
-.feedback-controls textarea{
-  margin: 1em;
-  padding: 10px;
-  border: solid 5px #c9c9c9;
-  transition: border 0.3s;
-  width: 100%;
-}
-
-.feedback-controls input:focus,
-.feedback-controls textarea:focus{
-  border: solid 5px #6AC5AC;
-}
-
-.feedback-controls button{
-  margin: 1em;
-}
-
 </style>
 <style class="theme-style wonderland">
-.page-title{
-  color: #888888;
-}
-#main_menu{
-  background-color: #888888;
-}
-#main_menu ul li a{
-  color: #551A8B;
-}
-#theme-selector{
-  background-color: #888888;
-}
 </style>
 <style class="theme-style wind-up">
-.page-title{
-  color: #115599;
-}
-#main_menu{
-  background-color: #115599;
-}
-
-#main_menu ul li a{
-  color: #FFFFFF;
-}
-#theme-selector{
-  background-color: #115599;
-}
 </style>
 {% block page_css %}
 {% endblock %}
 </head>
 <body>
 
-<div id="main_menu" class="main-column">
-    <ul>
-        <li><a href="{{ url_for('frontpage') }}">Welcome</a></li>
-        <li><a href="{{ url_for('current_feeds')}}">Current Feeds</a></li>
-        <li><a href="{{url_for('start_feed')}}">Start a New Feed</a></li>
-        <li><select id="theme-selector" onchange="switch_theme(this.selectedIndex);">
-        </select></li>
-        <li><a href="#feedback-area">Give Feedback</a></li>
-    </ul>
-</div>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Blow-by-Blow</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li {% if active_page == 'frontpage' %} class="active"{% endif%}>
+                <a href="{{ url_for('frontpage') }}">Welcome</a></li>
+            <li {% if active_page == 'current_feeds' %} class="active"{% endif%}>
+                <a href="{{ url_for('current_feeds')}}">Current Feeds</a></li>
+            <li {% if active_page == 'start_feed' %} class="active"{% endif%}>
+                <a href="{{url_for('start_feed')}}">Start a New Feed</a></li>
+            <li><a href="#feedback-area">Give Feedback</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
-
-{% block content %}
-{% endblock %}
-
-<div id="feedback-area" class="main-column">
-  <h2>Feedback</h2>      
-  <p>
-    We are always happy to receive any feedback both positive and negative.
-    If you wish you can provide your name and/or email. Neither is required,
-    if you do not provide an email we will have no way to respond to your
-    comment (which you may not want anyway).
-  </p>
-  <form id="give-feedback" class="feedback-controls" method="POST"
-        action="{{ url_for('give_feedback') }}">
-    {{ feedback_form.hidden_tag() }}
-    {{ feedback_form.feedback_name(placeholder="Name: Not required") }}
-    {{ feedback_form.feedback_email(placeholder="Email: Not required, but I won't be reply.") }}
-    {{ feedback_form.feedback_text(placeholder="What do you wish to suggest/praise/complain about?") }}
-    <button type="submit" class="feedback_submit_button"
-            id="feedback_submit_button" name="feedback_submit_button">Provide Feedback</button>
-  </form>
-</div>
+<div class="container">
+  <div class="lead-content">
+    {% with messages = get_flashed_messages() %}
+       {% if messages %}
+          <ul class=flashes>
+            {% for message in messages %}
+               <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+       {% endif %}
+    {% endwith %}
+    {% block lead_content %}
+    {% endblock %}
+  </div><!-- /.lead-content -->
 
 
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script>
-  var theme_names = ["wonderland", "wind-up"];
-  function switch_theme(theme_index){
-    for (i = 0; i < theme_names.length; i++) {
-      theme_name = theme_names[i];
-      var css_selector = '.theme-style.' + theme_name;
-      $(css_selector).attr("disabled", !(i == theme_index));
-    }
-  }
+    {% block main_content %}
+    {% endblock %}
 
-jQuery(document).ready(function(){
-  var select = document.getElementById('theme-selector');
-  for(i = 0; i < theme_names.length; i++){
-    var option = document.createElement('option');
-    var text_node = document.createTextNode(theme_names[i]);
-    option.appendChild(text_node);
-    select.appendChild(option);
-  }
-  switch_theme(0);
-})
-</script>
+    <div id="feedback-area" class="main-column">
+      <h2>Feedback</h2>      
+      <p>
+        We are always happy to receive any feedback both positive and negative.
+        If you wish you can provide your name and/or email. Neither is required,
+        if you do not provide an email we will have no way to respond to your
+        comment (which you may not want anyway).
+      </p>
+      <form id="give-feedback" class="feedback-controls" method="POST"
+            action="{{ url_for('give_feedback') }}">
+        {{ feedback_form.hidden_tag() }}
+        {{ feedback_form.feedback_name(placeholder="Name: Not required") }}
+        {{ feedback_form.feedback_email(placeholder="Email: Not required, but I won't be reply.") }}
+        {{ feedback_form.feedback_text(placeholder="What do you wish to suggest/praise/complain about?") }}
+        <button type="submit" class="feedback_submit_button"
+                id="feedback_submit_button" name="feedback_submit_button">Provide Feedback</button>
+      </form>
+    </div><!-- /#.feedback-area -->
+</div><!-- /.container -->
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<!-- Bootstrap Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+        integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 {% block page_scripts %}
 {% endblock %}
 </body>
