@@ -401,5 +401,8 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # Figure out if there is someway to do this automatically at least for
 # python anywhere.
 
+# TODO: Check the accessiblity, I suspect it is poor, at least use labels
+# for form inputs. Can we install a screen reader and see how it works?
+
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
