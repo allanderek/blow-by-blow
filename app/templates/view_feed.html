@@ -60,9 +60,9 @@
 </div><!-- /.alert -->
 {% endif %}
 
-<h1>{{db_feed.feed_title}}</h1>
+<h1 id="feed-title">{{db_feed.feed_title}}</h1>
   {% if db_feed.feed_desc %}
-    <p class="lead">{{db_feed.feed_desc}}</p>
+    <p id="feed-description" class="lead">{{db_feed.feed_desc}}</p>
   {% endif %}
 
 {% if secret is not none %}

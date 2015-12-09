@@ -304,12 +304,12 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.assertIn(comment, comment_texts)
 
     def check_feed_title(self, title):
-        selector = '.feed-title'
+        selector = '#feed-title'
         title_element = self.driver.find_element_by_css_selector(selector)
         self.assertEqual(title, title_element.text)
 
     def check_feed_description(self, description):
-        selector = '.feed-description'
+        selector = '#feed-description'
         desc_element = self.driver.find_element_by_css_selector(selector)
         self.assertEqual(description, desc_element.text)
 
@@ -330,7 +330,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
 
-        send_viewers_div_css = '#send-viewers-link'
+        send_viewers_div_css = 'div.alert a.alert-link'
         self.assertCssSelectorExists(send_viewers_div_css)
 
         # Give the feed a title
@@ -383,7 +383,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         """ Just make sure we can go to the front page and that
         the main menu is there and has at least one item."""
         self.driver.get(self.get_server_url())
-        main_menu_css = '#main_menu ul li'
+        main_menu_css = 'nav .container #navbar ul li'
         current_feeds_link_css = main_menu_css + ' a[href$="current"]'
         start_new_feed_link_css = main_menu_css + ' a[href$="startfeed"]'
         self.assertCssSelectorExists(main_menu_css)
