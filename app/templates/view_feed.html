@@ -61,13 +61,15 @@
           action="{{ url_for('update_feed',
                              feed_no=db_feed.id,
                              secret=secret) }}">
-        {{ update_feed_form.hidden_tag() }}
-        {{ update_feed_form.title_text(placeholder="New Title") }}
-        {{ update_feed_form.desc_text(placeholder="New Sticky Description") }}
-        <button type="submit"
-                class="update-feed-header-button"
-                id="update-feed-header-button"
-                name="update-feed-header-button">Update</button>
+        <div class="form-group">
+          {{ update_feed_form.hidden_tag() }}
+          {{ update_feed_form.title_text(placeholder="New Title", class="form-control") }}
+          {{ update_feed_form.desc_text(placeholder="New Sticky Description", class="form-control") }}
+          <button type="submit"
+                  class="update-feed-header-button"
+                  id="update-feed-header-button"
+                  name="update-feed-header-button">Update</button>
+        </div><!-- /.form-group -->
     </form>
 </div><!-- End of update-controls -->
 {% endif %}
@@ -79,14 +81,17 @@
               method="POST"
               action="{{ url_for('update_feed', feed_no=db_feed.id,
                                  secret=secret) }}">
+          <div class="form-group">
                 {{ update_feed_form.hidden_tag() }}
-                {{ update_feed_form.comment_text(placeholder="New update comment:") }}
+                {{ update_feed_form.comment_text(placeholder="New update comment:", class="form-control") }}
                 <button type="submit"
                         class="commentate_button"
                         id="commentate_button"
                         name="commentate_button">Commentate</button>
-            </form>
-    </div>
+          </div><!-- /.form-group -->
+
+        </form>
+    </div><!-- /#commentate-area -->
 {% endif %}
 
 {% endblock %} <!-- lead_content -->
@@ -98,7 +103,7 @@ Feed is refreshing
 <a href="javascript:refresh_feed('{{ db_feed.id }}');">Refresh Feed</a>
 <a id="toggle-feed-direction" href="javascript:toggle_feed_direction();">Toggle Feed Direction</a>
 
-<ul id="feed-moment-list">
+<ul id="feed-moment-list" class="list-group">
 </ul>
 
 {% endblock %} <!-- main_contents -->
@@ -117,7 +122,7 @@ function refresh_feed(feed_id) {
         for (i = 0; i < moments.length; i++) {
           moment = moments[i];
 	  moment_li = document.createElement('li');
-	  moment_li.className = "feed-moment";
+	  moment_li.className = "feed-moment list-group-item";
           time_div = document.createElement('div');
 	  time_div.className = "comment-time";
           time_div.innerHTML = moment['time']
