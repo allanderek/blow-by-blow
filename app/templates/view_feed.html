@@ -56,27 +56,29 @@
   {% endif %}
 
 {% if secret is not none %}
-<div id="update-controls" class="main-column">
-    <form id='update-feed' class="author-update" method="POST"
-          action="{{ url_for('update_feed',
-                             feed_no=db_feed.id,
-                             secret=secret) }}">
+    <div id="update-controls" class="panel panel-info">
+      <div class="panel-heading">Update Feed Headings</div>
+      <form id='update-feed' class="author-update" method="POST"
+            action="{{ url_for('update_feed',
+                    feed_no=db_feed.id,
+                    secret=secret) }}">
         <div class="form-group">
           {{ update_feed_form.hidden_tag() }}
           {{ update_feed_form.title_text(placeholder="New Title", class="form-control") }}
           {{ update_feed_form.desc_text(placeholder="New Sticky Description", class="form-control") }}
           <button type="submit"
-                  class="form-control"
+                  class="form-control btn btn-default"
                   id="update-feed-header-button"
                   name="update-feed-header-button">Update</button>
         </div><!-- /.form-group -->
-    </form>
-</div><!-- End of update-controls -->
+      </form>
+    </div><!-- End of update-controls -->
 {% endif %}
 
 
 {% if secret is not none %}
-    <div id="commentate-area">
+    <div id="commentate-area" class="panel panel-primary">
+        <div class="panel-heading">Create a moment!</div>
         <form id="make-comment" class="author-update"
               method="POST"
               action="{{ url_for('update_feed', feed_no=db_feed.id,
@@ -85,7 +87,7 @@
                 {{ update_feed_form.hidden_tag() }}
                 {{ update_feed_form.comment_text(placeholder="New update comment:", class="form-control") }}
                 <button type="submit"
-                        class="form-control"
+                        class="form-control btn btn-default"
                         id="commentate_button"
                         name="commentate_button">Commentate</button>
           </div><!-- /.form-group -->
