@@ -223,17 +223,42 @@ class FeedbackForm(flask_wtf.Form):
 
 
 @async
-def send_email_message(subject, body, recipients):
+def send_email_message_mailgun(email):
     sandbox = "sandboxadc7751e75ba41dca5e4ab88e3c13306.mailgun.org"
     url = "https://api.mailgun.net/v3/{0}/messages".format(sandbox)
-    sender = "Feedback Form <mailgun@{0}>".format(sandbox)
+    sender_address = "mailgun@{0}".format(sandbox)
+    if email.sender_name is not None:
+        sender = "{0} <{1}>".format(email.sender_name, sender_address)
+    else:
+        sender = sender_address
     api_key = application.config['MAILGUN_API_KEY']
     return requests.post(url,
                          auth=("api", api_key),
                          data={"from": sender,
-                               "to": recipients,
-                               "subject": subject,
-                               "text": body})
+                               "to": email.recipients,
+                               "subject": email.subject,
+                               "text": email.body})
+
+
+class Email(object):
+    """ Simple representation of an email message to be sent."""
+
+    def __init__(self, subject, body, sender_name, recipients):
+        self.subject = subject
+        self.body = body
+        self.sender_name = sender_name
+        self.recipients = recipients
+
+
+def send_email_message(email):
+    # We don't want to actually send the message every time we're testing.
+    # Note that if we really wish to record the emails and check that the
+    # correct ones were "sent" out, then we have to do something a bit clever
+    # because this code will not be executed in a different process to the
+    # test code. We could have some kind of test-only route that returns the
+    # list of emails sent as a JSON object or something.
+    if not application.config['TESTING']:
+        send_email_message_mailgun(email)
 
 
 @application.route('/give_feedback', methods=['POST'])
@@ -248,6 +273,7 @@ def give_feedback():
     feedback_name = form.feedback_name.data.lstrip()
     feedback_content = form.feedback_text.data
     subject = 'Feedback for Blow-by-Blow'
+    sender_name = 'Blow-by-Blow Feedback Form'
     recipients = application.config['ADMINS']
     message_body = """
     You got some feedback from the 'blow-by-blow' web application.
@@ -255,7 +281,9 @@ def give_feedback():
     Sender's email = {1}
     Content: {2}
     """.format(feedback_name, feedback_email, feedback_content)
-    send_email_message(subject, message_body, recipients)
+    email = Email(subject, message_body, sender_name, recipients)
+    send_email_message(email)
+    flask.flash("Thanks for your feedback!", 'info')
     return flask.redirect(redirect_url())
 
 # Now for some testing.
@@ -314,7 +342,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.assertEqual(description, desc_element.text)
 
     def fill_in_and_submit_form(self, fields, submit):
-        for field_css, field_text in fields:
+        for field_css, field_text in fields.items():
             self.fill_in_text_input_by_css(field_css, field_text)
         self.click_element_with_css(submit)
 
@@ -325,6 +353,11 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def fill_in_text_input_by_css(self, input_css, input_text):
         input_element = self.driver.find_element_by_css_selector(input_css)
         input_element.send_keys(input_text)
+
+    def check_flashed_message(self, message, category):
+        selector = 'div.alert.alert-{0}'.format(category)
+        elements = self.driver.find_elements_by_css_selector(selector)
+        self.assertTrue(any(message in e.text for e in elements))
 
     def test_create_feed(self):
         # Start a new feed.
@@ -340,7 +373,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # Give the feed a title
         title = 'Red Team vs Blue Team'
         update_header_button_css = '#update-feed-header-button'
-        self.fill_in_and_submit_form([('#title_text', title)],
+        self.fill_in_and_submit_form({'#title_text': title},
                                      update_header_button_css)
         self.check_feed_title(title)
 
@@ -348,14 +381,14 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # both the title and the description and *then* click update,
         # but we're doing it as two separate POSTs.
         description_text = "My commentary on the Red vs Blue match."
-        self.fill_in_and_submit_form([('#desc_text', description_text)],
+        self.fill_in_and_submit_form({'#desc_text': description_text},
                                      update_header_button_css)
         self.check_feed_description(description_text)
 
         # Add a comment to that feed.
         first_comment = 'Match has kicked off, it is raining'
         commentate_button_css = '#commentate_button'
-        self.fill_in_and_submit_form([('#comment_text', first_comment)],
+        self.fill_in_and_submit_form({'#comment_text': first_comment},
                                      commentate_button_css)
         self.check_comment_exists(first_comment)
 
@@ -374,6 +407,14 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.check_feed_title(title)
         self.check_feed_description(description_text)
         self.check_comment_exists(first_comment)
+
+    def test_feedback(self):
+        self.driver.get(self.get_url('/'))
+        feedback = {'#feedback_email': "example_user@example.com",
+                    '#feedback_name': "Avid User",
+                    '#feedback_text': "I hope your feedback form works."}
+        self.fill_in_and_submit_form(feedback, '#feedback_submit_button')
+        self.check_flashed_message("Thanks for your feedback!", 'info')
 
     def test_server_is_up_and_running(self):
         response = urllib.request.urlopen(self.get_server_url())
