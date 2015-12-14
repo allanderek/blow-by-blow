@@ -459,5 +459,9 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # TODO: Check the accessiblity, I suspect it is poor, at least use labels
 # for form inputs. Can we install a screen reader and see how it works?
 
+# TODO: Check that someone cannot break the feedback form by sending some
+# kind of control/escape characters that would break the 'api' call.
+# Obviously would be good to author a test for that as well.
+
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
