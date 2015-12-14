@@ -118,6 +118,13 @@ def redirect_url(default='frontpage'):
             flask.url_for(default))
 
 
+def render_template(*args, **kwargs):
+    """ A simple wrapper, the base template requires some arguments such as
+    the feedback form. This means that this argument will be in all calls to
+    `flask.render_template` so we may as well factor it out."""
+    return flask.render_template(*args, feedback_form=FeedbackForm(), **kwargs)
+
+
 @application.route('/grabmoments', methods=['POST'])
 def grab_moments():
     feed_id = flask.request.form['feed_id']
@@ -127,17 +134,14 @@ def grab_moments():
 
 @application.route("/")
 def frontpage():
-    return flask.render_template('frontpage.html',
-                                 feedback_form=FeedbackForm())
+    return render_template('frontpage.html')
 
 
 @application.route('/current')
 def current_feeds():
     query = database.session.query(DBFeed)
     db_feeds = query.all()  # Turns into a list, might be better to iter.
-    return flask.render_template('current_feeds.html',
-                                 db_feeds=db_feeds,
-                                 feedback_form=FeedbackForm())
+    return render_template('current_feeds.html', db_feeds=db_feeds)
 
 
 @application.route('/startfeed')
@@ -162,7 +166,6 @@ class UpdateFeedForm(flask_wtf.Form):
 def view_feed(feed_no, secret=None):
     db_feed = database.session.query(DBFeed).filter_by(id=feed_no).one()
     update_feed_form = None if secret is None else UpdateFeedForm()
-    feedback_form = FeedbackForm()
     if secret is not None and secret != db_feed.author_secret:
         viewers_link = flask.url_for('view_feed', feed_no=feed_no)
         message = ("<p>You do not have the correct author secret "
@@ -174,11 +177,10 @@ def view_feed(feed_no, secret=None):
                    "without any author controls."
                    "</p>").format(viewers_link)
         flask.flash(flask.Markup(message), 'warning')
-    return flask.render_template('view_feed.html',
-                                 db_feed=db_feed,
-                                 secret=secret,
-                                 update_feed_form=update_feed_form,
-                                 feedback_form=feedback_form)
+    return render_template('view_feed.html',
+                           db_feed=db_feed,
+                           secret=secret,
+                           update_feed_form=update_feed_form)
 
 
 @application.route('/update_feed/<int:feed_no>/<int:secret>',
