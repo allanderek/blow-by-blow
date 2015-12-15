@@ -293,6 +293,7 @@ import flask.ext.testing
 import urllib
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+import pytest
 
 
 class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
@@ -324,7 +325,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def assertCssSelectorNotExists(self, css_selector):
         """ Asserts that no element that matches the given css selector
         is present."""
-        with self.assertRaises(NoSuchElementException):
+        with pytest.raises(NoSuchElementException):
             self.driver.find_element_by_css_selector(css_selector)
 
     def get_moment_texts(self):
