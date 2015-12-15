@@ -337,15 +337,15 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         moment_texts = self.driver.find_elements_by_css_selector(selector)
         return (element.text for element in moment_texts)
 
-    def check_comment_exists(self, comment):
-        self.assertIn(comment, self.get_moment_texts())
+    def check_moment_exists(self, moment_text):
+        self.assertIn(moment_text, self.get_moment_texts())
 
-    def check_comment_order(self, comments):
+    def check_moment_order(self, moment_texts):
         """Actually checks if the comments are entirely equal, but in theory
         could just check the ones given are in the correct order ignoring any
         in the moment feed that are not in the given list of comments."""
         moments = self.get_moment_texts()
-        self.assertEqual(comments, list(moments))
+        self.assertEqual(moment_texts, list(moments))
 
     def check_feed_title(self, title):
         selector = '#feed-title'
@@ -388,9 +388,9 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         assertExistance(self.update_header_button_css)
         assertExistance(self.add_moment_submit_button_css)
 
-    def add_feed_moment(self, comment):
+    def add_feed_moment(self, moment_text):
         submit_css = self.add_moment_submit_button_css
-        form_fields = {'#comment_text': comment}
+        form_fields = {'#comment_text': moment_text}
         self.fill_in_and_submit_form(form_fields, submit_css)
 
     def test_create_feed(self):
@@ -415,15 +415,15 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
                                      self.update_header_button_css)
         self.check_feed_description(description_text)
 
-        # Add a comment to that feed.
-        first_comment = 'Match has kicked off, it is raining.'
-        self.add_feed_moment(first_comment)
-        self.check_comment_exists(first_comment)
+        # Add a moment to that feed.
+        first_moment = 'Match has kicked off, it is raining.'
+        self.add_feed_moment(first_moment)
+        self.check_moment_exists(first_moment)
 
-        # Now add a second comment to that feed
-        second_comment = "We're into the second minute."
-        self.add_feed_moment(second_comment)
-        self.check_comment_exists(second_comment)
+        # Now add a second moment to that feed
+        second_moment = "We're into the second minute."
+        self.add_feed_moment(second_moment)
+        self.check_moment_exists(second_moment)
 
         # In a new window we wish to view the feed without being able
         # to author it, we could just remove the author-secret from the
@@ -440,23 +440,23 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.check_feed_title(title)
         self.check_feed_description(description_text)
 
-        self.check_comment_order([second_comment, first_comment])
+        self.check_moment_order([second_moment, first_moment])
         feed_direction_toggle_css = '#feed-direction-button'
         self.click_element_with_css(feed_direction_toggle_css)
-        self.check_comment_order([first_comment, second_comment])
+        self.check_moment_order([first_moment, second_moment])
 
         # Switch back to the original author window and add a new moment
         # then switch back to the viewer window, press refresh feed and
         # check that the new moment is there *and* the feed is in the
         # correct order.
         self.driver.switch_to.window(author_window_handle)
-        third_comment = "A booking in the third minute."
-        self.add_feed_moment(third_comment)
+        third_moment = "A booking in the third minute."
+        self.add_feed_moment(third_moment)
         self.driver.switch_to_window(viewer_window_handle)
         refresh_feed_css = '#refresh-feed-button'
         self.click_element_with_css(refresh_feed_css)
-        self.check_comment_order([first_comment,
-                                  second_comment, third_comment])
+        self.check_moment_order([first_moment,
+                                 second_moment, third_moment])
 
     def test_feedback(self):
         self.driver.get(self.get_url('/'))
