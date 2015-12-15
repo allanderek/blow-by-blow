@@ -327,11 +327,20 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         with self.assertRaises(NoSuchElementException):
             self.driver.find_element_by_css_selector(css_selector)
 
-    def check_comment_exists(self, comment):
+    def get_moment_texts(self):
         selector = '#feed-moment-list li .comment-text'
-        comments = self.driver.find_elements_by_css_selector(selector)
-        comment_texts = (element.text for element in comments)
-        self.assertIn(comment, comment_texts)
+        moment_texts = self.driver.find_elements_by_css_selector(selector)
+        return (element.text for element in moment_texts)
+
+    def check_comment_exists(self, comment):
+        self.assertIn(comment, self.get_moment_texts())
+
+    def check_comment_order(self, comments):
+        """Actually checks if the comments are entirely equal, but in theory
+        could just check the ones given are in the correct order ignoring any
+        in the moment feed that are not in the given list of comments."""
+        moments = self.get_moment_texts()
+        self.assertEqual(comments, list(moments))
 
     def check_feed_title(self, title):
         selector = '#feed-title'
@@ -409,6 +418,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # Now add a second comment to that feed
         second_comment = "We're into the second minute."
         self.add_feed_moment(second_comment)
+        self.check_comment_exists(second_comment)
 
         # In a new window we wish to view the feed without being able
         # to author it, we could just remove the author-secret from the
@@ -422,7 +432,11 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.check_author_controls(False, expected_viewer_feed_url)
         self.check_feed_title(title)
         self.check_feed_description(description_text)
-        self.check_comment_exists(first_comment)
+
+        self.check_comment_order([second_comment, first_comment])
+        feed_direction_toggle_css = '#feed-direction-button'
+        self.click_element_with_css(feed_direction_toggle_css)
+        self.check_comment_order([first_comment, second_comment])
 
     def test_feedback(self):
         self.driver.get(self.get_url('/'))
