@@ -317,10 +317,14 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def assertCssSelectorExists(self, css_selector):
         """ Asserts that there is an element that matches the given
         css selector."""
+        # We do not actually need to do anything special here, if the
+        # element does not exist we fill fail with a NoSuchElementException
+        # however we wrap this up in a pytest.fail because the error message
+        # is then a bit nicer to read.
         try:
             self.driver.find_element_by_css_selector(css_selector)
         except NoSuchElementException:
-            self.assertTrue(False)
+            pytest.fail("Element {0} not found!".format(css_selector))
 
     def assertCssSelectorNotExists(self, css_selector):
         """ Asserts that no element that matches the given css selector
