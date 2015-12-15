@@ -10,11 +10,11 @@
     border: 1px solid #6AC5AC;
     border-radius: 15px;
 }
-.comment-time{
+.moment-time{
     color: #AF2233;
     padding-left: 0.5em;
 }
-.comment-text{
+.moment-text{
     padding-left: 2em;
 }
 </style>
@@ -91,23 +91,23 @@
 
 
 {% if secret is not none %}
-    <div id="commentate-area" class="panel panel-info">
+    <div id="make-moment-area" class="panel panel-info">
         <div class="panel-heading">Create a moment!</div>
-        <form id="make-comment" class="author-update"
+        <form id="make-moment" class="author-update"
               method="POST"
               action="{{ url_for('update_feed', feed_no=db_feed.id,
                                  secret=secret) }}">
           <div class="form-group">
                 {{ update_feed_form.hidden_tag() }}
-                {{ update_feed_form.comment_text(placeholder="New update comment:", class="form-control") }}
+                {{ update_feed_form.moment_text(placeholder="New update moment:", class="form-control") }}
                 <button type="submit"
                         class="form-control btn btn-default"
-                        id="commentate_button"
-                        name="commentate_button">Commentate</button>
+                        id="add-moment-button"
+                        name="add-moment-button">Commentate</button>
           </div><!-- /.form-group -->
 
         </form>
-    </div><!-- /#commentate-area -->
+    </div><!-- /#make-moment-area -->
 {% endif %}
 
 {% endblock %} <!-- lead_content -->
@@ -145,10 +145,10 @@ function refresh_feed(feed_id) {
 	  moment_li = document.createElement('li');
 	  moment_li.className = "feed-moment list-group-item";
           time_div = document.createElement('div');
-	  time_div.className = "comment-time";
+	  time_div.className = "moment-time";
           time_div.innerHTML = moment['time']
           text_div = document.createElement('div');
-          text_div.className = "comment-text";
+          text_div.className = "moment-text";
 	  text_div.innerHTML = moment['content'];
           moment_li.appendChild(time_div);
 	  moment_li.appendChild(text_div);

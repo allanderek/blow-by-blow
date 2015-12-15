@@ -158,7 +158,7 @@ def start_feed():
 class UpdateFeedForm(flask_wtf.Form):
     title_text = wtforms.StringField("New Title:")
     desc_text = wtforms.TextAreaField("Description:")
-    comment_text = wtforms.TextAreaField("Next comment:")
+    moment_text = wtforms.TextAreaField("Next moment:")
 
 
 @application.route('/viewfeed/<int:feed_no>')  # noqa
@@ -206,13 +206,13 @@ def update_feed(feed_no, secret):
     # these entries are empty and if so issue a warning/error.
     new_title = form.title_text.data.lstrip()
     new_description = form.desc_text.data.lstrip()
-    comment = form.comment_text.data.lstrip()
+    moment_text = form.moment_text.data.lstrip()
     if new_title:
         db_feed.feed_title = new_title
     if new_description:
         db_feed.feed_desc = new_description
-    if comment:
-        moment = DBMoment(db_feed.id, comment)
+    if moment_text:
+        moment = DBMoment(db_feed.id, moment_text)
         database.session.add(moment)
     database.session.commit()
     return flask.redirect(redirect_url())
@@ -221,7 +221,7 @@ def update_feed(feed_no, secret):
 class FeedbackForm(flask_wtf.Form):
     feedback_name = wtforms.StringField("Name:")
     feedback_email = wtforms.StringField("Email:")
-    feedback_text = wtforms.TextAreaField("Next comment:")
+    feedback_text = wtforms.TextAreaField("Feedback:")
 
 
 @async
@@ -333,7 +333,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
             self.driver.find_element_by_css_selector(css_selector)
 
     def get_moment_texts(self):
-        selector = '#feed-moment-list li .comment-text'
+        selector = '#feed-moment-list li .moment-text'
         moment_texts = self.driver.find_elements_by_css_selector(selector)
         return (element.text for element in moment_texts)
 
@@ -341,9 +341,9 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.assertIn(moment_text, self.get_moment_texts())
 
     def check_moment_order(self, moment_texts):
-        """Actually checks if the comments are entirely equal, but in theory
+        """Actually checks if the moments are entirely equal, but in theory
         could just check the ones given are in the correct order ignoring any
-        in the moment feed that are not in the given list of comments."""
+        in the feed that are not in the given list of moment texts."""
         moments = self.get_moment_texts()
         self.assertEqual(moment_texts, list(moments))
 
@@ -376,7 +376,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.assertTrue(any(message in e.text for e in elements))
 
     update_header_button_css = '#update-feed-header-button'
-    add_moment_submit_button_css = '#commentate_button'
+    add_moment_submit_button_css = '#add-moment-button'
 
     def check_author_controls(self, is_author, expected_viewer_feed_url):
         assertExistance = (self.assertCssSelectorExists if is_author
@@ -390,7 +390,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 
     def add_feed_moment(self, moment_text):
         submit_css = self.add_moment_submit_button_css
-        form_fields = {'#comment_text': moment_text}
+        form_fields = {'#moment_text': moment_text}
         self.fill_in_and_submit_form(form_fields, submit_css)
 
     def test_create_feed(self):
@@ -495,7 +495,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 # solution for relatively *obvious* defects/todos.
 
 # TODO: Posting should not make you leave the current page but simply
-# post the new comment. Note however that if you have multiple authors
+# post the new moment. Note however that if you have multiple authors
 # then you may in fact wish to refresh the feed when you post, so I'm not
 # entirely sure about this.
 
