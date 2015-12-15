@@ -10,6 +10,7 @@ __pycache__
 htmlcov
 venv/
 *-venv/
+app/.cache
 
 Cakefile.js
 app/coffee/*.js
