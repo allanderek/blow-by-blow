@@ -168,14 +168,16 @@ def view_feed(feed_no, secret=None):
     update_feed_form = None if secret is None else UpdateFeedForm()
     if secret is not None and secret != db_feed.author_secret:
         viewers_link = flask.url_for('view_feed', feed_no=feed_no)
-        message = ("<p>You do not have the correct author secret "
-                   "to update this feed, hence you will be unable "
-                   "to make any updates including adding moments."
-                   "</p>"
-                   "<p>"
-                   'You can simply view the feed <a href="{0}">here</a> '
-                   "without any author controls."
-                   "</p>").format(viewers_link)
+        message_format = """<p>You do not have the correct author secret
+        to update this feed, hence you will be unable
+        to make any updates including adding moments.
+        </p>
+        <p>
+        You can simply view the feed <a href="{0}">here</a>
+        without any author controls.
+        </p>
+        """
+        message = message_format.format(viewers_link)
         flask.flash(flask.Markup(message), 'warning')
     return render_template('view_feed.html',
                            db_feed=db_feed,
@@ -393,10 +395,15 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         form_fields = {'#moment_text': moment_text}
         self.fill_in_and_submit_form(form_fields, submit_css)
 
+    def open_new_window(self, url):
+        script = "$(window.open('{0}'))".format(url)
+        self.driver.execute_script(script)
+
     def test_create_feed(self):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
-        url_fields = self.driver.current_url.split('/')
+        author_url = self.driver.current_url
+        url_fields = author_url.split('/')
         feed_id = url_fields[url_fields.index('viewfeed') + 1]
         expected_viewer_feed_url = '/viewfeed/' + feed_id
         self.check_author_controls(True, expected_viewer_feed_url)
@@ -429,8 +436,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # to author it, we could just remove the author-secret from the
         # current url but this seems more 'genuine'.
         view_current_url = self.get_url('current')
-        script = "$(window.open('{0}'))".format(view_current_url)
-        self.driver.execute_script(script)
+        self.open_new_window(view_current_url)
         author_window_handle = self.driver.window_handles[0]
         viewer_window_handle = self.driver.window_handles[-1]
         self.driver.switch_to.window(viewer_window_handle)
@@ -457,6 +463,14 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.click_element_with_css(refresh_feed_css)
         self.check_moment_order([first_moment,
                                  second_moment, third_moment])
+
+        # Now open another window and go to a url that has a secret but
+        # one that is incorrect, and check that the warning is flashed.
+        incorrect_author_url = author_url + "1"
+        self.open_new_window(incorrect_author_url)
+        self.driver.switch_to_window(self.driver.window_handles[-1])
+        expected_message = "You do not have the correct author secret"
+        self.check_flashed_message(expected_message, 'warning')
 
     def test_feedback(self):
         self.driver.get(self.get_url('/'))
