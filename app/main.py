@@ -361,22 +361,36 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         elements = self.driver.find_elements_by_css_selector(selector)
         self.assertTrue(any(message in e.text for e in elements))
 
+    update_header_button_css = '#update-feed-header-button'
+    add_moment_submit_button_css = '#commentate_button'
+
+    def check_author_controls(self, is_author, expected_viewer_feed_url):
+        assertExistance = (self.assertCssSelectorExists if is_author
+                           else self.assertCssSelectorNotExists)
+        sel_template = 'div.alert a.alert-link[href$="{0}"]'
+        send_viewers_div_css = sel_template.format(expected_viewer_feed_url)
+        assertExistance(send_viewers_div_css)
+        assertExistance(send_viewers_div_css)
+        assertExistance(self.update_header_button_css)
+        assertExistance(self.add_moment_submit_button_css)
+
+    def add_feed_moment(self, comment):
+        submit_css = self.add_moment_submit_button_css
+        form_fields = {'#comment_text': comment}
+        self.fill_in_and_submit_form(form_fields, submit_css)
+
     def test_create_feed(self):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
-
         url_fields = self.driver.current_url.split('/')
         feed_id = url_fields[url_fields.index('viewfeed') + 1]
         expected_viewer_feed_url = '/viewfeed/' + feed_id
-        sel_template = 'div.alert a.alert-link[href$="{0}"]'
-        send_viewers_div_css = sel_template.format(expected_viewer_feed_url)
-        self.assertCssSelectorExists(send_viewers_div_css)
+        self.check_author_controls(True, expected_viewer_feed_url)
 
         # Give the feed a title
         title = 'Red Team vs Blue Team'
-        update_header_button_css = '#update-feed-header-button'
         self.fill_in_and_submit_form({'#title_text': title},
-                                     update_header_button_css)
+                                     self.update_header_button_css)
         self.check_feed_title(title)
 
         # Give the feed a description, note that we could fill in
@@ -384,15 +398,17 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         # but we're doing it as two separate POSTs.
         description_text = "My commentary on the Red vs Blue match."
         self.fill_in_and_submit_form({'#desc_text': description_text},
-                                     update_header_button_css)
+                                     self.update_header_button_css)
         self.check_feed_description(description_text)
 
         # Add a comment to that feed.
-        first_comment = 'Match has kicked off, it is raining'
-        commentate_button_css = '#commentate_button'
-        self.fill_in_and_submit_form({'#comment_text': first_comment},
-                                     commentate_button_css)
+        first_comment = 'Match has kicked off, it is raining.'
+        self.add_feed_moment(first_comment)
         self.check_comment_exists(first_comment)
+
+        # Now add a second comment to that feed
+        second_comment = "We're into the second minute."
+        self.add_feed_moment(second_comment)
 
         # In a new window we wish to view the feed without being able
         # to author it, we could just remove the author-secret from the
@@ -403,9 +419,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.driver.switch_to.window(self.driver.window_handles[-1])
         feed_link_selector = 'a[href$="{0}"]'.format(expected_viewer_feed_url)
         self.click_element_with_css(feed_link_selector)
-        self.assertCssSelectorNotExists(send_viewers_div_css)
-        self.assertCssSelectorNotExists(update_header_button_css)
-        self.assertCssSelectorNotExists(commentate_button_css)
+        self.check_author_controls(False, expected_viewer_feed_url)
         self.check_feed_title(title)
         self.check_feed_description(description_text)
         self.check_comment_exists(first_comment)
