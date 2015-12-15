@@ -431,7 +431,9 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         view_current_url = self.get_url('current')
         script = "$(window.open('{0}'))".format(view_current_url)
         self.driver.execute_script(script)
-        self.driver.switch_to.window(self.driver.window_handles[-1])
+        author_window_handle = self.driver.window_handles[0]
+        viewer_window_handle = self.driver.window_handles[-1]
+        self.driver.switch_to.window(viewer_window_handle)
         feed_link_selector = 'a[href$="{0}"]'.format(expected_viewer_feed_url)
         self.click_element_with_css(feed_link_selector)
         self.check_author_controls(False, expected_viewer_feed_url)
@@ -442,6 +444,19 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         feed_direction_toggle_css = '#feed-direction-button'
         self.click_element_with_css(feed_direction_toggle_css)
         self.check_comment_order([first_comment, second_comment])
+
+        # Switch back to the original author window and add a new moment
+        # then switch back to the viewer window, press refresh feed and
+        # check that the new moment is there *and* the feed is in the
+        # correct order.
+        self.driver.switch_to.window(author_window_handle)
+        third_comment = "A booking in the third minute."
+        self.add_feed_moment(third_comment)
+        self.driver.switch_to_window(viewer_window_handle)
+        refresh_feed_css = '#refresh-feed-button'
+        self.click_element_with_css(refresh_feed_css)
+        self.check_comment_order([first_comment,
+                                  second_comment, third_comment])
 
     def test_feedback(self):
         self.driver.get(self.get_url('/'))
