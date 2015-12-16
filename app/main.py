@@ -340,7 +340,10 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         return (element.text for element in moment_texts)
 
     def check_moment_exists(self, moment_text):
-        self.assertIn(moment_text, self.get_moment_texts())
+        assert (moment_text in self.get_moment_texts())
+
+    def check_moment_does_not_exist(self, moment_text):
+        assert moment_text not in self.get_moment_texts()
 
     def check_moment_order(self, moment_texts):
         """Actually checks if the moments are entirely equal, but in theory
@@ -373,8 +376,13 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         input_element.send_keys(input_text)
 
     def check_flashed_message(self, message, category):
+        category = flash_bootstrap_category(category)
         selector = 'div.alert.alert-{0}'.format(category)
         elements = self.driver.find_elements_by_css_selector(selector)
+        if category == 'error':
+            print("error: messages:")
+            for e in elements:
+                print(e.text)
         self.assertTrue(any(message in e.text for e in elements))
 
     update_header_button_css = '#update-feed-header-button'
@@ -471,6 +479,18 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.driver.switch_to_window(self.driver.window_handles[-1])
         expected_message = "You do not have the correct author secret"
         self.check_flashed_message(expected_message, 'warning')
+
+        # Now we attempt to add a moment anyway and check that we get
+        # an error flashed to us and that the moment does not exist.
+        failed_moment = "I cannot add moments here."
+        self.add_feed_moment(failed_moment)
+        self.check_moment_does_not_exist(failed_moment)
+        self.check_flashed_message("Update Failed", 'error')
+        # Switch back to the viewer window, refresh the feed and check
+        # that the moment does not exist.
+        self.driver.switch_to_window(viewer_window_handle)
+        self.click_element_with_css(refresh_feed_css)
+        self.check_moment_does_not_exist(failed_moment)
 
     def test_feedback(self):
         self.driver.get(self.get_url('/'))
