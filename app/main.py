@@ -537,9 +537,6 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
 
 # TODO: Write a test to specifically check for XSS errors.
 
-# TODO: More tests, specifically for refreshing the feed and toggling
-# the feed direction.
-
 # TODO: Check the accessiblity, I suspect it is poor, at least use labels
 # for form inputs. Can we install a screen reader and see how it works?
 
