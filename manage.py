@@ -10,6 +10,7 @@ migrate = Migrate(application, database)
 manager = Manager(application)
 manager.add_command('db', MigrateCommand)
 
+
 def run_command(command):
     """ We frequently inspect the return result of a command so this is just
         a utility function to do this. Generally we call this as:
@@ -17,6 +18,7 @@ def run_command(command):
     """
     result = os.system(command)
     return 0 if result == 0 else 1
+
 
 @manager.command
 def coffeelint():
@@ -48,7 +50,7 @@ def test_casper(name=None):
 @manager.command
 def test_main():
     """Run the python only tests defined within app/main.py"""
-    return run_command("python -m unittest app.main")
+    return run_command("py.test app/main.py")
 
 
 @manager.command
