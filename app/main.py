@@ -258,7 +258,7 @@ def send_email_message(email):
     # We don't want to actually send the message every time we're testing.
     # Note that if we really wish to record the emails and check that the
     # correct ones were "sent" out, then we have to do something a bit clever
-    # because this code will not be executed in a different process to the
+    # because this code will be executed in a different process to the
     # test code. We could have some kind of test-only route that returns the
     # list of emails sent as a JSON object or something.
     if not application.config['TESTING']:
