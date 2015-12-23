@@ -140,7 +140,9 @@ def frontpage():
 @application.route('/current')
 def current_feeds():
     query = database.session.query(DBFeed)
-    db_feeds = query.all()  # Turns into a list, might be better to iter.
+    # The use of 'all' turns this into a list, might be better
+    # for it to simply iterate through the results.
+    db_feeds = query.limit(100).all()
     return render_template('current_feeds.html', db_feeds=db_feeds)
 
 
@@ -345,12 +347,12 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def check_moment_does_not_exist(self, moment_text):
         assert moment_text not in self.get_moment_texts()
 
-    def check_moment_order(self, moment_texts):
+    def check_moment_order(self, expected_moment_texts):
         """Actually checks if the moments are entirely equal, but in theory
         could just check the ones given are in the correct order ignoring any
         in the feed that are not in the given list of moment texts."""
-        moments = self.get_moment_texts()
-        self.assertEqual(moment_texts, list(moments))
+        moment_texts = self.get_moment_texts()
+        assert all(x == y for x, y in zip(expected_moment_texts, moment_texts))
 
     def check_feed_title(self, title):
         selector = '#feed-title'
