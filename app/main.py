@@ -409,6 +409,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         script = "$(window.open('{0}'))".format(url)
         self.driver.execute_script(script)
 
+    @pytest.mark.skipif(True, reason="Wait/stale testing bug.")
     def test_create_feed(self):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
