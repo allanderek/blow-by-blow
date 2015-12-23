@@ -28,14 +28,6 @@ registerTest = (test) ->
   for name in test.names
     testObjectsByName[name] = test
 
-runTest = (name) ->
-  test = testObjectsByName[name]
-  test.run()
-
-runAll = ->
-  for test in allTestObjects
-    test.run()
-
 # test suites
 class BrowserTest
   # An abstract base class for our browser tests
@@ -70,10 +62,19 @@ class FrontPageTest extends BrowserTest
 
 registerTest new FrontPageTest
 
+runTests = (name) ->
+  test = testObjectsByName[name]
+  test.run()
 
-# helper functions
+runAll = ->
+  for test in allTestObjects
+    test.run()
+  shutdown()
 
-# run it
+shutdown = ->
+  casper.log "shutting down..."
+  casper.open 'http://localhost:5000/shutdown',
+    method: 'post'
 
 if casper.cli.has("single")
   runTest casper.cli.options['single']
@@ -81,6 +82,4 @@ else
   runAll()
 
 casper.run ->
-  casper.log "shutting down..."
-  casper.open 'http://localhost:5000/shutdown',
-    method: 'post'
+  shutdown()

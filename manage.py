@@ -39,12 +39,20 @@ def test_browser(name):
 @manager.command
 def test_casper(name=None):
     """Run the specified single CasperJS test, or all if not given"""
-    from app.test_browser import PhantomTest
-    phantom_test = PhantomTest('test_run')
-    phantom_test.set_single(name)
-    result = phantom_test.test_run()
-    return (0 if result == 0 else 1)
-
+    import subprocess
+    server_command = ["coverage", "run", "--source", "app.main",
+                      "manage.py", "run_test_server"]
+    # server_command = ['python', 'manage.py', 'run_test_server']
+    js_test_file = "app/static/compiled-js/tests/browser.js"
+    casper_command = ["casperjs", "test", js_test_file]
+    server = subprocess.Popen(server_command)
+    import time
+    time.sleep(3)
+    casper = subprocess.Popen(casper_command)
+    casper.wait(timeout=60)
+    server.wait(timeout=60)
+    os.system("coverage report -m")
+    os.system("coverage html")
 
 @manager.command
 def test_main():
@@ -92,8 +100,8 @@ def coverage(quick=False, browser=False, phantom=False):
 def run_test_server():
     """Used by the phantomjs tests to run a live testing server"""
     # running the server in debug mode during testing fails for some reason
-    application.DEBUG = True
-    application.TESTING = True
+    application.config['DEBUG'] = True
+    application.config['TESTING'] = True
     port = application.config['LIVE_SERVER_PORT']
     application.run(port=port, use_reloader=False, threaded=True)
 
