@@ -45,9 +45,10 @@ def test_casper(name=None):
     # server_command = ['python', 'manage.py', 'run_test_server']
     js_test_file = "app/static/compiled-js/tests/browser.js"
     casper_command = ["casperjs", "test", js_test_file]
-    server = subprocess.Popen(server_command)
-    import time
-    time.sleep(3)
+    server = subprocess.Popen(server_command, stderr=subprocess.PIPE)
+    for line in server.stderr:
+        if line.startswith(b' * Running on'):
+            break
     casper = subprocess.Popen(casper_command)
     casper.wait(timeout=60)
     server.wait(timeout=60)
