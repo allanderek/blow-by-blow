@@ -37,23 +37,26 @@ def test_browser(name):
 
 
 @manager.command
-def test_casper(name=None):
-    """Run the specified single CasperJS test, or all if not given"""
+def test_casper(nocoverage=False):
+    """Run the casper test suite with or without coverage analysis."""
     import subprocess
-    server_command = ["coverage", "run", "--source", "app.main",
-                      "manage.py", "run_test_server"]
-    # server_command = ['python', 'manage.py', 'run_test_server']
+    coverage_prefix = ["coverage", "run", "--source", "app.main"]
+    server_command_prefx = ['python'] if nocoverage else coverage_prefix
+    server_command = server_command_prefx + ["manage.py", "run_test_server"]
     js_test_file = "app/static/compiled-js/tests/browser.js"
     casper_command = ["casperjs", "test", js_test_file]
     server = subprocess.Popen(server_command, stderr=subprocess.PIPE)
+    # TODO: If we don't get this line we should  be able to detect that
+    # and avoid the starting casper process.
     for line in server.stderr:
         if line.startswith(b' * Running on'):
             break
     casper = subprocess.Popen(casper_command)
     casper.wait(timeout=60)
     server.wait(timeout=60)
-    os.system("coverage report -m")
-    os.system("coverage html")
+    if not nocoverage:
+        os.system("coverage report -m")
+        os.system("coverage html")
 
 @manager.command
 def test_main():
@@ -66,35 +69,6 @@ def test():
     casper_result = test_casper()
     main_result = test_main()
     return max([casper_result, main_result])
-
-
-@manager.command
-def coverage(quick=False, browser=False, phantom=False):
-    rcpath = os.path.abspath('.coveragerc')
-
-    quick_command = 'test_package app.tests'
-    # once all browser tests are converted to phantom, we can remove the
-    # phantom option
-    browser_command = 'test_package app.browser_tests'
-    phantom_command = 'test_module app.browser_tests.phantom'
-    full_command = 'test_all'
-
-    if quick:
-        manage_command = quick_command
-    elif browser:
-        manage_command = browser_command
-    elif phantom:
-        manage_command = phantom_command
-    else:
-        manage_command = full_command
-
-    if os.path.exists('.coverage'):
-        os.remove('.coverage')
-    os.system(("COVERAGE_PROCESS_START='{0}' "
-               "coverage run manage.py {1}").format(rcpath, manage_command))
-    os.system("coverage combine")
-    os.system("coverage report -m")
-    os.system("coverage html")
 
 
 @manager.command
