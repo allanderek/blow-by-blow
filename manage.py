@@ -39,6 +39,9 @@ def test_browser(name):
 @manager.command
 def test_casper(nocoverage=False):
     """Run the casper test suite with or without coverage analysis."""
+    if coffeebuild():
+        print("Coffee script failed to compile, exiting test!")
+        return 1
     import subprocess
     coverage_prefix = ["coverage", "run", "--source", "app.main"]
     server_command_prefx = ['python'] if nocoverage else coverage_prefix
