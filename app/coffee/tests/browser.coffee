@@ -47,6 +47,9 @@ class BrowserTest
       casper.then ->
         test.done()
 
+  get_url: (local_url) ->
+    serverUrl + "/" + local_url
+
   names: []
   description: 'This class needs a description'
   numTests: 0
@@ -61,6 +64,18 @@ class FrontPageTest extends BrowserTest
       test.assertExists 'h1'
 
 registerTest new FrontPageTest
+
+
+class NormalFunctionalityTest extends BrowserTest
+  names: ['NormalFunctionality']
+  description: "Tests the normal functionality of authoring and viewing feeds"
+  numTests: 1
+
+  testBody: (test) ->
+    casper.thenOpen (this.get_url 'startfeed'), ->
+      test.assertExists 'h1'
+
+registerTest new NormalFunctionalityTest
 
 runTests = (name) ->
   test = testObjectsByName[name]
