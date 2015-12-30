@@ -47,12 +47,22 @@ class BrowserTest
       casper.then ->
         test.done()
 
-  get_url: (local_url) ->
-    serverUrl + "/" + local_url
-
   names: []
   description: 'This class needs a description'
   numTests: 0
+
+  get_url: (local_url) ->
+    serverUrl + "/" + local_url
+
+  update_header_button_css: '#update-feed-header-button'
+  add_moment_submit_button_css: '#add-moment-button'
+
+  check_author_controls: (test, expected_viewer_feed_url) ->
+    viewer_link_selector = "div.alert
+                            a.alert-link[href$=\"#{expected_viewer_feed_url}\"]"
+    test.assertExists viewer_link_selector
+    test.assertExists @update_header_button_css
+    test.assertExists @add_moment_submit_button_css
 
 class FrontPageTest extends BrowserTest
   names: ['FrontPage']
@@ -69,11 +79,16 @@ registerTest new FrontPageTest
 class NormalFunctionalityTest extends BrowserTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 1
+  numTests: 3
 
   testBody: (test) ->
-    casper.thenOpen (this.get_url 'startfeed'), ->
-      test.assertExists 'h1'
+    url = @get_url 'startfeed'
+    casper.thenOpen url, =>
+      current_url = casper.getCurrentUrl()
+      fields = current_url.split "/"
+      feed_id = fields[4]
+      expected_viewer_feed_url = '/viewfeed/' + feed_id
+      @check_author_controls test, expected_viewer_feed_url
 
 registerTest new NormalFunctionalityTest
 
@@ -84,12 +99,10 @@ runTests = (name) ->
 runAll = ->
   for test in allTestObjects
     test.run()
-  shutdown()
 
 shutdown = ->
   casper.log "shutting down..."
-  casper.open 'http://localhost:5000/shutdown',
-    method: 'post'
+  casper.open 'http://localhost:5000/shutdown', method: 'post'
 
 if casper.cli.has("single")
   runTest casper.cli.options['single']
