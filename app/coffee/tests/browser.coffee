@@ -18,38 +18,19 @@ debug_dump_html = () ->
   casper.echo (casper.getHTML())
 
 
-# test inventory management
+class NormalFunctionalityTest
+  names: ['NormalFunctionality']
+  description: "Tests the normal functionality of authoring and viewing feeds"
+  numTests: 3
 
-testObjectsByName = {}
-allTestObjects = []
-
-registerTest = (test) ->
-  allTestObjects.push test
-  for name in test.names
-    testObjectsByName[name] = test
-
-# test suites
-class BrowserTest
-  # An abstract base class for our browser tests
-  #
-  # Instances should define the following properties:
-  #
-  # * testBody: called by `run` below to execute the test
-  # * names: array of names by which a caller can identify this test (with the
-  #          `--single` command line option)
-  # * description
-  # * numTests: expected number of assertions
-
-  run: =>
-    casper.test.begin @description, @numTests, (test) =>
-      casper.start()
-      @testBody(test)
-      casper.then ->
-        test.done()
-
-  names: []
-  description: 'This class needs a description'
-  numTests: 0
+  testBody: (test) ->
+    url = @get_url 'startfeed'
+    casper.thenOpen url, =>
+      current_url = casper.getCurrentUrl()
+      fields = current_url.split "/"
+      feed_id = fields[4]
+      expected_viewer_feed_url = '/viewfeed/' + feed_id
+      @check_author_controls test, expected_viewer_feed_url
 
   get_url: (local_url) ->
     serverUrl + "/" + local_url
@@ -64,50 +45,20 @@ class BrowserTest
     test.assertExists @update_header_button_css
     test.assertExists @add_moment_submit_button_css
 
-class FrontPageTest extends BrowserTest
-  names: ['FrontPage']
-  description: "Simplest test possible, we visit the homepage."
-  numTests: 1
+runTestClass = (testClass) ->
+  casper.test.begin testClass.description, testClass.numTests, (test) ->
+    casper.start()
+    testClass.testBody(test)
+    casper.echo 'I just want anything to work.'
+    casper.run ->
+      test.done()
 
-  testBody: (test) ->
-    casper.thenOpen serverUrl, ->
-      test.assertExists 'h1'
+runTestClass (new NormalFunctionalityTest)
 
-registerTest new FrontPageTest
-
-
-class NormalFunctionalityTest extends BrowserTest
-  names: ['NormalFunctionality']
-  description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 3
-
-  testBody: (test) ->
-    url = @get_url 'startfeed'
-    casper.thenOpen url, =>
-      current_url = casper.getCurrentUrl()
-      fields = current_url.split "/"
-      feed_id = fields[4]
-      expected_viewer_feed_url = '/viewfeed/' + feed_id
-      @check_author_controls test, expected_viewer_feed_url
-
-registerTest new NormalFunctionalityTest
-
-runTests = (name) ->
-  test = testObjectsByName[name]
-  test.run()
-
-runAll = ->
-  for test in allTestObjects
-    test.run()
-
-shutdown = ->
-  casper.log "shutting down..."
-  casper.open 'http://localhost:5000/shutdown', method: 'post'
-
-if casper.cli.has("single")
-  runTest casper.cli.options['single']
-else
-  runAll()
-
-casper.run ->
-  shutdown()
+casper.test.begin 'The shutdown test', 0, (test) ->
+  casper.start()
+  casper.thenOpen 'http://localhost:5000/shutdown', method: 'post', ->
+    casper.echo 'Shutting down ...'
+  casper.run ->
+    casper.echo 'Shutdown'
+    test.done()
