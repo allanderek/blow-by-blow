@@ -21,7 +21,7 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 3
+  numTests: 4
 
   testBody: (test) ->
     url = @get_url 'startfeed'
@@ -31,12 +31,21 @@ class NormalFunctionalityTest
       feed_id = fields[4]
       expected_viewer_feed_url = '/viewfeed/' + feed_id
       @check_author_controls test, expected_viewer_feed_url
+      # Give the feed a title
+      title = 'Red Team vs Blue Team'
+      casper.fillSelectors '#update-feed', ('#title_text': title), true
+    casper.then =>
+      @check_feed_title test, 'Red Team vs Blue Team'
+
 
   get_url: (local_url) ->
     serverUrl + "/" + local_url
 
   update_header_button_css: '#update-feed-header-button'
   add_moment_submit_button_css: '#add-moment-button'
+
+  check_feed_title: (test, expected_title) ->
+    test.assertEqual (casper.fetchText '#feed-title'), expected_title
 
   check_author_controls: (test, expected_viewer_feed_url) ->
     viewer_link_selector = "div.alert
