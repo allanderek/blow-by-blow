@@ -21,8 +21,10 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 4
+  numTests: 5
 
+  feed_title: 'Red Team vs Blue Team'
+  feed_description: 'My commentary on the Red vs Blue match'
   testBody: (test) ->
     url = @get_url 'startfeed'
     casper.thenOpen url, =>
@@ -32,10 +34,16 @@ class NormalFunctionalityTest
       expected_viewer_feed_url = '/viewfeed/' + feed_id
       @check_author_controls test, expected_viewer_feed_url
       # Give the feed a title
-      title = 'Red Team vs Blue Team'
-      casper.fillSelectors '#update-feed', ('#title_text': title), true
+      casper.fillSelectors '#update-feed', ('#title_text': @feed_title), true
     casper.then =>
-      @check_feed_title test, 'Red Team vs Blue Team'
+      @check_feed_title test, @feed_title
+      # Give the feed a description, note that we could fill in
+      # both the title and the description and *then* click update,
+      # but we're doing it as two separate POSTs.
+      casper.fillSelectors '#update-feed',
+                           ('#desc_text': @feed_description), true
+    casper.then =>
+      @check_feed_description test, @feed_description
 
 
   get_url: (local_url) ->
@@ -45,7 +53,12 @@ class NormalFunctionalityTest
   add_moment_submit_button_css: '#add-moment-button'
 
   check_feed_title: (test, expected_title) ->
-    test.assertEqual (casper.fetchText '#feed-title'), expected_title
+    test.assertSelectorHasText '#feed-title', expected_title,
+      'Feed has the correct title'
+
+  check_feed_description: (test, expected_desc) ->
+    test.assertSelectorHasText '#feed-description', expected_desc,
+      'Feed has the correct description'
 
   check_author_controls: (test, expected_viewer_feed_url) ->
     viewer_link_selector = "div.alert
