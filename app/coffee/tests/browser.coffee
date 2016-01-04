@@ -21,10 +21,13 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 5
+  numTests: 6
 
   feed_title: 'Red Team vs Blue Team'
   feed_description: 'My commentary on the Red vs Blue match'
+  first_moment: 'Match has kicked off, it is raining.'
+  second_moment: "We're into the second minute."
+
   testBody: (test) ->
     url = @get_url 'startfeed'
     casper.thenOpen url, =>
@@ -44,6 +47,13 @@ class NormalFunctionalityTest
                            ('#desc_text': @feed_description), true
     casper.then =>
       @check_feed_description test, @feed_description
+      # Add a moment to that feed.
+      # @add_moment @first_moment
+      casper.fillSelectors '#make-moment', ('#moment_text': @first_moment), true
+    casper.then =>
+      casper.fillSelectors '#make-moment', ('#moment_text': @second_moment), true
+    casper.then =>
+      @check_moments test, [@second_moment, @first_moment]
 
 
   get_url: (local_url) ->
@@ -66,6 +76,17 @@ class NormalFunctionalityTest
     test.assertExists viewer_link_selector
     test.assertExists @update_header_button_css
     test.assertExists @add_moment_submit_button_css
+
+  add_moment: (moment_text) ->
+    casper.fillSelectors '#make-moment', ('#moment_text': moment_text), true
+
+  check_moments: (test, expected_moment_texts) ->
+    # casper.fetchTexts returns the concatenated string of all the texts
+    # from all the elements matching the given selector.
+    # actual_moments = casper.fetchText '#feed-moment-list li .moment-text'
+    #test.assertEqual actual_moments, (expected_moment_texts.join())
+    test.assertSelectorHasText '#feed-moment-list li .moment-text',
+      (expected_moment_texts.join('')), 'Checking moments in feed.'
 
 runTestClass = (testClass) ->
   casper.test.begin testClass.description, testClass.numTests, (test) ->
