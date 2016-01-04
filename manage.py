@@ -81,7 +81,16 @@ def run_test_server():
     application.config['DEBUG'] = True
     application.config['TESTING'] = True
     port = application.config['LIVE_SERVER_PORT']
+    # Don't use the production database but a temporary test database.
+    application.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///test.db"
+    database.create_all()
+    database.session.commit()
+
     application.run(port=port, use_reloader=False, threaded=True)
+
+    database.session.remove()
+    database.drop_all()
+
 
 if __name__ == "__main__":
     manager.run()
