@@ -21,7 +21,7 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 6
+  numTests: 7
 
   feed_title: 'Red Team vs Blue Team'
   feed_description: 'My commentary on the Red vs Blue match'
@@ -34,8 +34,8 @@ class NormalFunctionalityTest
       current_url = casper.getCurrentUrl()
       fields = current_url.split "/"
       feed_id = fields[4]
-      expected_viewer_feed_url = '/viewfeed/' + feed_id
-      @check_author_controls test, expected_viewer_feed_url
+      @expected_viewer_feed_url = '/viewfeed/' + feed_id
+      @check_author_controls test, @expected_viewer_feed_url
       # Give the feed a title
       casper.fillSelectors '#update-feed', ('#title_text': @feed_title), true
     casper.then =>
@@ -48,12 +48,22 @@ class NormalFunctionalityTest
     casper.then =>
       @check_feed_description test, @feed_description
       # Add a moment to that feed.
-      # @add_moment @first_moment
-      casper.fillSelectors '#make-moment', ('#moment_text': @first_moment), true
+      @add_moment @first_moment
     casper.then =>
-      casper.fillSelectors '#make-moment', ('#moment_text': @second_moment), true
+      @add_moment @second_moment
     casper.then =>
       @check_moments test, [@second_moment, @first_moment]
+    # We would really like to do the viewing in a second window but that seems
+    # at best non-trivial in casperJS, and perhaps impossible. So for the
+    # time-being we just use the one window.
+    casper.thenOpen (@get_url 'current'), =>
+      feed_url = @expected_viewer_feed_url
+      feed_link_selector = "a[href$=\"#{feed_url}\"]"
+      test.assertExists feed_link_selector
+      # self.click_element_with_css(feed_link_selector)
+      # self.check_author_controls(False, expected_viewer_feed_url)
+      # self.check_feed_title(title)
+      # self.check_feed_description(description_text)
 
 
   get_url: (local_url) ->
