@@ -21,7 +21,7 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 7
+  numTests: 12
 
   feed_title: 'Red Team vs Blue Team'
   feed_description: 'My commentary on the Red vs Blue match'
@@ -35,7 +35,7 @@ class NormalFunctionalityTest
       fields = current_url.split "/"
       feed_id = fields[4]
       @expected_viewer_feed_url = '/viewfeed/' + feed_id
-      @check_author_controls test, @expected_viewer_feed_url
+      @check_author_controls test, true, @expected_viewer_feed_url
       # Give the feed a title
       casper.fillSelectors '#update-feed', ('#title_text': @feed_title), true
     casper.then =>
@@ -60,10 +60,11 @@ class NormalFunctionalityTest
       feed_url = @expected_viewer_feed_url
       feed_link_selector = "a[href$=\"#{feed_url}\"]"
       test.assertExists feed_link_selector
-      # self.click_element_with_css(feed_link_selector)
-      # self.check_author_controls(False, expected_viewer_feed_url)
-      # self.check_feed_title(title)
-      # self.check_feed_description(description_text)
+      casper.click feed_link_selector
+    casper.then =>
+      @check_author_controls test, false, @expected_viewer_feed_url
+      @check_feed_title test, @feed_title
+      @check_feed_description test, @feed_description
 
 
   get_url: (local_url) ->
@@ -80,12 +81,14 @@ class NormalFunctionalityTest
     test.assertSelectorHasText '#feed-description', expected_desc,
       'Feed has the correct description'
 
-  check_author_controls: (test, expected_viewer_feed_url) ->
+  check_author_controls: (test, is_author, expected_viewer_feed_url) ->
     viewer_link_selector = "div.alert
                             a.alert-link[href$=\"#{expected_viewer_feed_url}\"]"
-    test.assertExists viewer_link_selector
-    test.assertExists @update_header_button_css
-    test.assertExists @add_moment_submit_button_css
+    assertion = (s) ->
+      if is_author then test.assertExists s else test.assertDoesntExist s
+    assertion viewer_link_selector
+    assertion @update_header_button_css
+    assertion @add_moment_submit_button_css
 
   add_moment: (moment_text) ->
     casper.fillSelectors '#make-moment', ('#moment_text': moment_text), true
@@ -102,7 +105,6 @@ runTestClass = (testClass) ->
   casper.test.begin testClass.description, testClass.numTests, (test) ->
     casper.start()
     testClass.testBody(test)
-    casper.echo 'I just want anything to work.'
     casper.run ->
       test.done()
 
