@@ -21,21 +21,24 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 14
+  numTests: 15
 
   feed_title: 'Red Team vs Blue Team'
   feed_description: 'My commentary on the Red vs Blue match'
   first_moment: 'Match has kicked off, it is raining.'
   second_moment: "We're into the second minute."
+  third_moment: "A booking in the third minute."
 
   testBody: (test) ->
     url = @get_url 'startfeed'
+    author_url = null
+    expected_viewer_feed_url = null
     casper.thenOpen url, =>
-      current_url = casper.getCurrentUrl()
-      fields = current_url.split "/"
+      author_url = casper.getCurrentUrl()
+      fields = author_url.split "/"
       feed_id = fields[4]
-      @expected_viewer_feed_url = '/viewfeed/' + feed_id
-      @check_author_controls test, true, @expected_viewer_feed_url
+      expected_viewer_feed_url = '/viewfeed/' + feed_id
+      @check_author_controls test, true, expected_viewer_feed_url
       # Give the feed a title
       casper.fillSelectors '#update-feed', ('#title_text': @feed_title), true
     casper.then =>
@@ -57,12 +60,12 @@ class NormalFunctionalityTest
     # at best non-trivial in casperJS, and perhaps impossible. So for the
     # time-being we just use the one window.
     casper.thenOpen (@get_url 'current'), =>
-      feed_url = @expected_viewer_feed_url
+      feed_url = expected_viewer_feed_url
       feed_link_selector = "a[href$=\"#{feed_url}\"]"
       test.assertExists feed_link_selector
       casper.click feed_link_selector
     casper.then =>
-      @check_author_controls test, false, @expected_viewer_feed_url
+      @check_author_controls test, false, expected_viewer_feed_url
       @check_feed_title test, @feed_title
       @check_feed_description test, @feed_description
       # Now we check the moment order, then hit the toggle order button and
@@ -74,6 +77,20 @@ class NormalFunctionalityTest
         return earliest_first
     casper.then =>
       @check_moments test, [@first_moment, @second_moment]
+    # We would like to switch back to the author window at this point, but
+    # unfortunately due to a limitation in casperJS that only allows for a
+    # single open window, so instead we'll send a post request to update the
+    # feed with the correct author secret and then check that the refresh feed
+    # works.
+
+    # This represents a slightly strange construction here merely because
+    # outwith a 'then' step we cannot access 'author_url'
+    casper.then ->
+      incorrect_author_url = author_url + "1"
+      casper.open incorrect_author_url
+    casper.then =>
+      expected_message = "You do not have the correct author secret"
+      @check_flashed_message test, expected_message, 'warning'
 
   get_url: (local_url) ->
     serverUrl + "/" + local_url
@@ -105,9 +122,14 @@ class NormalFunctionalityTest
     # casper.fetchTexts returns the concatenated string of all the texts
     # from all the elements matching the given selector.
     # actual_moments = casper.fetchText '#feed-moment-list li .moment-text'
-    #test.assertEqual actual_moments, (expected_moment_texts.join())
+    # test.assertEqual actual_moments, (expected_moment_texts.join())
     test.assertSelectorHasText '#feed-moment-list li .moment-text',
       (expected_moment_texts.join('')), 'Checking moments in feed.'
+
+  check_flashed_message: (test, expected_message, category) ->
+    selector = "div.alert.alert-#{category}"
+    test.assertSelectorHasText selector, expected_message,
+      'Checking flashed message'
 
 runTestClass = (testClass) ->
   casper.test.begin testClass.description, testClass.numTests, (test) ->
