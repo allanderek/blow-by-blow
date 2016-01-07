@@ -40,7 +40,7 @@ def run_with_test_server(test_command, coverage):
     server_command = server_command_prefx + ["manage.py", "run_test_server"]
     server = subprocess.Popen(server_command, stderr=subprocess.PIPE)
     # TODO: If we don't get this line we should  be able to detect that
-    # and avoid the starting casper process.
+    # and avoid the starting test process.
     for line in server.stderr:
         if line.startswith(b' * Running on'):
             break
@@ -64,9 +64,11 @@ def test_casper(nocoverage=False):
 
 
 @manager.command
-def test_main():
-    """Run the python only tests defined within app/main.py"""
-    return run_command("py.test app/main.py")
+def test_main(nocoverage=False):
+    """Run the python only tests within py.test app/main.py we still run
+    the test server in parallel and produce a coverage report."""
+    test_command = ['py.test', 'app/main.py']
+    return run_with_test_server(test_command, not nocoverage)
 
 
 @manager.command
@@ -102,7 +104,7 @@ def run_test_server():
     # us to quit the server without killing the process thus enabling coverage
     # to work.
     application.add_url_rule('/shutdown', 'shutdown', shutdown,
-                             methods=['POST'])
+                             methods=['POST', 'GET'])
 
     application.run(port=port, use_reloader=False, threaded=True)
 

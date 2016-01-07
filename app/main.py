@@ -294,30 +294,30 @@ def give_feedback():
 
 
 # Now for some testing.
-import flask.ext.testing
 import urllib
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 import pytest
 
 
-class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
-
-    def create_app(self):
-        application.config['TESTING'] = True
-        # Default port is 5000
-        application.config['LIVESERVER_PORT'] = 8943
-
-        # Don't use the production database but a temporary test
-        # database.
-        application.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///test.db"
-
+class BasicFunctionalityTests(object):
+    """Basic functionality test. This requires a running server as it does not
+    start one itself. See the 'manage.py' file how this is run.
+    """
+    def start_driver(self):
         self.driver = webdriver.PhantomJS()
         self.driver.set_window_size(1120, 550)
-        return application
+
+    def quit_driver(self):
+        self.driver.quit()
 
     def get_url(self, local_url):
-        return "/".join([self.get_server_url(), local_url])
+        # Obviously this is not the same application instance as the running
+        # server and hence the LIVE_SERVER_PORT could in theory be different,
+        # but for testing purposes we just make sure it this is correct.
+        port = application.config['LIVE_SERVER_PORT']
+        url = 'http://localhost:{0}'.format(port)
+        return "/".join([url, local_url])
 
     def assertCssSelectorExists(self, css_selector):
         """ Asserts that there is an element that matches the given
@@ -358,12 +358,12 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
     def check_feed_title(self, title):
         selector = '#feed-title'
         title_element = self.driver.find_element_by_css_selector(selector)
-        self.assertEqual(title, title_element.text)
+        assert title == title_element.text
 
     def check_feed_description(self, description):
         selector = '#feed-description'
         desc_element = self.driver.find_element_by_css_selector(selector)
-        self.assertEqual(description, desc_element.text)
+        assert description == desc_element.text
 
     def fill_in_and_submit_form(self, fields, submit):
         for field_css, field_text in fields.items():
@@ -386,7 +386,7 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
             print("error: messages:")
             for e in elements:
                 print(e.text)
-        self.assertTrue(any(message in e.text for e in elements))
+        assert any(message in e.text for e in elements)
 
     update_header_button_css = '#update-feed-header-button'
     add_moment_submit_button_css = '#add-moment-button'
@@ -411,7 +411,6 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.driver.execute_script(script)
 
     def test_create_feed(self):
-        # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
         author_url = self.driver.current_url
         url_fields = author_url.split('/')
@@ -504,13 +503,13 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.check_flashed_message("Thanks for your feedback!", 'info')
 
     def test_server_is_up_and_running(self):
-        response = urllib.request.urlopen(self.get_server_url())
-        self.assertEqual(response.code, 200)
+        response = urllib.request.urlopen(self.get_url('/'))
+        assert response.code == 200
 
     def test_frontpage_links(self):
         """ Just make sure we can go to the front page and that
         the main menu is there and has at least one item."""
-        self.driver.get(self.get_server_url())
+        self.driver.get(self.get_url('/'))
         main_menu_css = 'nav .container #navbar ul li'
         current_feeds_link_css = main_menu_css + ' a[href$="current"]'
         start_new_feed_link_css = main_menu_css + ' a[href$="startfeed"]'
@@ -518,14 +517,18 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         self.assertCssSelectorExists(current_feeds_link_css)
         self.assertCssSelectorExists(start_new_feed_link_css)
 
-    def setUp(self):
-        database.create_all()
-        database.session.commit()
+def test_our_server():
+    basic = BasicFunctionalityTests()
+    basic.start_driver()
+    try:
+        basic.test_server_is_up_and_running()
+        basic.test_frontpage_links()
+        basic.test_create_feed()
+        basic.test_feedback()
+    finally:
+        basic.driver.get(basic.get_url('shutdown'))
+        basic.quit_driver()
 
-    def tearDown(self):
-        self.driver.quit()
-        database.session.remove()
-        database.drop_all()
 
 # A lightweight way to write down a few simple todos. Of course using the
 # issue tracker is the better way to do this, this is just a lightweight
