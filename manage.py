@@ -3,7 +3,7 @@ import os
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 
-from app.main import application, database
+from app.main import application, database, shutdown
 
 migrate = Migrate(application, database)
 manager = Manager(application)
@@ -85,6 +85,12 @@ def run_test_server():
     application.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///test.db"
     database.create_all()
     database.session.commit()
+
+    # Add a route that allows the test code to shutdown the server, this allows
+    # us to quit the server without killing the process thus enabling coverage
+    # to work.
+    application.add_url_rule('/shutdown', 'shutdown', shutdown,
+                             methods=['POST'])
 
     application.run(port=port, use_reloader=False, threaded=True)
 

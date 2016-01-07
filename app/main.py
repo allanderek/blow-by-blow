@@ -293,33 +293,6 @@ def give_feedback():
     return flask.redirect(redirect_url())
 
 
-# test-only routes (used in testing to access the server more directly than
-# users are normally allowed to), and their helpers.  These should all use the
-# `test_only_route` decorator below:
-
-def test_only_route(self, rule, **options):
-    "A wrapper for `application.route`, that disables the route outside testing"
-    def decorator(f):
-        # we can't just check at compile time whether testing mode is on,
-        # because it's not set until after this file is imported (until then,
-        # the importing module has no app object to set the testing flag on).
-        #
-        # Therefore we have to check at the time the wrapped view function is
-        # called.
-        def guarded_f(*f_args, **f_options):
-            if self.config['TESTING']:
-                return f(*f_args, **f_options)
-            else:
-                return "You are not in the testing environment!"
-        if 'endpoint' not in options:
-            options['endpoint'] = f.__name__
-        self.route(rule, **options)(guarded_f)
-        return guarded_f
-    return decorator
-
-flask.Flask.test_only_route = test_only_route
-
-@application.test_only_route('/shutdown', methods=['POST', 'GET'])
 def shutdown():
     """Shutdown the Werkzeug dev server, if we're using it.
     From http://flask.pocoo.org/snippets/67/"""
@@ -446,7 +419,6 @@ class BasicFunctionalityTest(flask.ext.testing.LiveServerTestCase):
         script = "$(window.open('{0}'))".format(url)
         self.driver.execute_script(script)
 
-    @pytest.mark.skipif(True, reason="Wait/stale testing bug.")
     def test_create_feed(self):
         # Start a new feed.
         self.driver.get(self.get_url('startfeed'))
