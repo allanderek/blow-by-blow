@@ -21,7 +21,7 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 12
+  numTests: 14
 
   feed_title: 'Red Team vs Blue Team'
   feed_description: 'My commentary on the Red vs Blue match'
@@ -65,7 +65,15 @@ class NormalFunctionalityTest
       @check_author_controls test, false, @expected_viewer_feed_url
       @check_feed_title test, @feed_title
       @check_feed_description test, @feed_description
-
+      # Now we check the moment order, then hit the toggle order button and
+      # check that we indeed have a toggled moment order
+      @check_moments test, [@second_moment, @first_moment]
+      casper.click '#feed-direction-button'
+    casper.waitFor ->
+      return casper.evaluate ->
+        return earliest_first
+    casper.then =>
+      @check_moments test, [@first_moment, @second_moment]
 
   get_url: (local_url) ->
     serverUrl + "/" + local_url
