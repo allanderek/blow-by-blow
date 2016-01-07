@@ -30,30 +30,38 @@ def coffeebuild():
     return run_command('coffee -c -o app/static/compiled-js app/coffee')
 
 
-@manager.command
-def test_casper(nocoverage=False):
-    """Run the casper test suite with or without coverage analysis."""
-    if coffeebuild():
-        print("Coffee script failed to compile, exiting test!")
-        return 1
+def run_with_test_server(test_command, coverage):
+    """Run the test server and the given test command in parallel. If 'coverage'
+    is True, then we run the server under coverage analysis and produce a
+    coverge report."""
     import subprocess
     coverage_prefix = ["coverage", "run", "--source", "app.main"]
-    server_command_prefx = ['python'] if nocoverage else coverage_prefix
+    server_command_prefx = coverage_prefix if coverage else ['python']
     server_command = server_command_prefx + ["manage.py", "run_test_server"]
-    js_test_file = "app/static/compiled-js/tests/browser.js"
-    casper_command = ["casperjs", "test", js_test_file]
     server = subprocess.Popen(server_command, stderr=subprocess.PIPE)
     # TODO: If we don't get this line we should  be able to detect that
     # and avoid the starting casper process.
     for line in server.stderr:
         if line.startswith(b' * Running on'):
             break
-    casper = subprocess.Popen(casper_command)
-    casper.wait(timeout=60)
-    server.wait(timeout=60)
-    if not nocoverage:
+    test_process = subprocess.Popen(test_command)
+    test_process.wait(timeout=60)
+    server_return_code = server.wait(timeout=60)
+    if coverage:
         os.system("coverage report -m")
         os.system("coverage html")
+    return server_return_code
+
+@manager.command
+def test_casper(nocoverage=False):
+    """Run the casper test suite with or without coverage analysis."""
+    if coffeebuild():
+        print("Coffee script failed to compile, exiting test!")
+        return 1
+    js_test_file = "app/static/compiled-js/tests/browser.js"
+    casper_command = ["casperjs", "test", js_test_file]
+    return run_with_test_server(casper_command, not nocoverage)
+
 
 @manager.command
 def test_main():
