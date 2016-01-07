@@ -63,6 +63,8 @@ class NormalFunctionalityTest
       feed_url = expected_viewer_feed_url
       feed_link_selector = "a[href$=\"#{feed_url}\"]"
       test.assertExists feed_link_selector
+      #Save the csrf_token for later use
+      @csrf_token = casper.getElementAttribute '#update-controls input#csrf_token', 'value'
       casper.click feed_link_selector
     casper.then =>
       @check_author_controls test, false, expected_viewer_feed_url
@@ -82,7 +84,21 @@ class NormalFunctionalityTest
     # single open window, so instead we'll send a post request to update the
     # feed with the correct author secret and then check that the refresh feed
     # works.
-
+    # TODO, this does not quite work yet.
+    # casper.then =>
+    #   fields = author_url.split "/"
+    #   feed_id = fields[4]
+    #   author_secret = fields[5]
+    #   update_url = @get_url "update_feed/#{feed_id}/#{author_secret}"
+    #   casper.echo update_url
+    #   casper.open update_url, method: 'post', data: {
+    #     'title_text': ''
+    #     'desc_text': ''
+    #     'moment_text': @third_moment
+    #     'csrf_token': @csrf_token
+    #   }
+    # casper.thenClick '#refresh-feed-button', =>
+    #  @check_moments test, [@first_moment, @second_moment, @third_moment]
     # This represents a slightly strange construction here merely because
     # outwith a 'then' step we cannot access 'author_url'
     casper.then ->
