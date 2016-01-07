@@ -293,15 +293,6 @@ def give_feedback():
     return flask.redirect(redirect_url())
 
 
-def shutdown():
-    """Shutdown the Werkzeug dev server, if we're using it.
-    From http://flask.pocoo.org/snippets/67/"""
-    func = flask.request.environ.get('werkzeug.server.shutdown')
-    if func is None:  # pragma: no cover
-        raise RuntimeError('Not running with the Werkzeug Server')
-    func()
-    return 'Server shutting down...'
-
 # Now for some testing.
 import flask.ext.testing
 import urllib

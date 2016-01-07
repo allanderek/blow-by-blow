@@ -1,9 +1,10 @@
 import os
 
+import flask
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 
-from app.main import application, database, shutdown
+from app.main import application, database
 
 migrate = Migrate(application, database)
 manager = Manager(application)
@@ -72,6 +73,16 @@ def test():
     casper_result = test_casper()
     main_result = test_main()
     return max([casper_result, main_result])
+
+
+def shutdown():
+    """Shutdown the Werkzeug dev server, if we're using it.
+    From http://flask.pocoo.org/snippets/67/"""
+    func = flask.request.environ.get('werkzeug.server.shutdown')
+    if func is None:  # pragma: no cover
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+    return 'Server shutting down...'
 
 
 @manager.command
