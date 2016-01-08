@@ -300,7 +300,7 @@ from selenium.common.exceptions import NoSuchElementException
 import pytest
 
 
-class BasicFunctionalityTests(object):
+class BasicFunctionalityTests(object):  #pragma: no cover
     """Basic functionality test. This requires a running server as it does not
     start one itself. See the 'manage.py' file how this is run.
     """
@@ -517,7 +517,7 @@ class BasicFunctionalityTests(object):
         self.assertCssSelectorExists(current_feeds_link_css)
         self.assertCssSelectorExists(start_new_feed_link_css)
 
-def test_our_server():
+def test_our_server():  #pragma: no cover
     basic = BasicFunctionalityTests()
     basic.start_driver()
     try:
