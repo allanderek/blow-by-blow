@@ -529,26 +529,5 @@ def test_our_server():  #pragma: no cover
         basic.driver.get(basic.get_url('shutdown'))
         basic.quit_driver()
 
-
-# A lightweight way to write down a few simple todos. Of course using the
-# issue tracker is the better way to do this, this is just a lightweight
-# solution for relatively *obvious* defects/todos.
-
-# TODO: Posting should not make you leave the current page but simply
-# post the new moment. Note however that if you have multiple authors
-# then you may in fact wish to refresh the feed when you post, so I'm not
-# entirely sure about this.
-
-# TODO: Add some instructions about multiple authors
-
-# TODO: Write a test to specifically check for XSS errors.
-
-# TODO: Check the accessiblity, I suspect it is poor, at least use labels
-# for form inputs. Can we install a screen reader and see how it works?
-
-# TODO: Check that someone cannot break the feedback form by sending some
-# kind of control/escape characters that would break the 'api' call.
-# Obviously would be good to author a test for that as well.
-
 if __name__ == "__main__":
     application.run(debug=True, threaded=True)
