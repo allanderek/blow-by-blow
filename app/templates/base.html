@@ -47,11 +47,39 @@ body {
                 <a href="{{ url_for('current_feeds')}}">Current Feeds</a></li>
             <li {% if active_page == 'start_feed' %} class="active"{% endif%}>
                 <a href="{{url_for('start_feed')}}">Start a New Feed</a></li>
-            <li><a href="#feedback-area">Give Feedback</a></li>
+            <li><a href="#" data-toggle="modal" data-target="#feedback-modal">Give Feedback</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div><!-- /.container -->
     </nav>
+
+    <!-- Feedback Modal Dialog -->
+    <div id="feedback-modal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <div id="feedback-area" class="modal-content">
+          <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Feedback</h4>
+            We are always happy to receive any feedback both positive and negative.
+            If you wish you can provide your name and/or email. Neither is required,
+            if you do not provide an email we will have no way to respond to your
+            comment (which you may not want anyway).
+          </div>
+          <form id="give-feedback" class="feedback-controls" method="POST"
+                action="{{ url_for('give_feedback') }}">
+            <div class="form-group">
+              {{ feedback_form.hidden_tag() }}
+              {{ feedback_form.feedback_name(placeholder="Name: Not required", class="form-control") }}
+              {{ feedback_form.feedback_email(placeholder="Email: Not required, but I won't be able to reply.",  class="form-control") }}
+              {{ feedback_form.feedback_text(placeholder="What do you wish to suggest/praise/complain about?", class="form-control") }}
+              <button type="submit" class="form-control btn btn-default"
+                      id="feedback_submit_button" name="feedback_submit_button">Provide Feedback</button>
+            </div><!-- /.form-group -->
+          </form>
+        </div><!-- /#feedback-area -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /#feedback-modal -->
+
 
 <div class="container">
   <div class="lead-content">
@@ -71,30 +99,8 @@ body {
     {% endblock %}
   </div><!-- /.lead-content -->
 
-
     {% block main_content %}
     {% endblock %}
-
-    <div id="feedback-area" class="main-column">
-      <h2>Feedback</h2>      
-      <p>
-        We are always happy to receive any feedback both positive and negative.
-        If you wish you can provide your name and/or email. Neither is required,
-        if you do not provide an email we will have no way to respond to your
-        comment (which you may not want anyway).
-      </p>
-      <form id="give-feedback" class="feedback-controls" method="POST"
-            action="{{ url_for('give_feedback') }}">
-        <div class="form-group">
-          {{ feedback_form.hidden_tag() }}
-          {{ feedback_form.feedback_name(placeholder="Name: Not required", class="form-control") }}
-          {{ feedback_form.feedback_email(placeholder="Email: Not required, but I won't be able to reply.",  class="form-control") }}
-          {{ feedback_form.feedback_text(placeholder="What do you wish to suggest/praise/complain about?", class="form-control") }}
-          <button type="submit" class="form-control btn btn-default"
-                  id="feedback_submit_button" name="feedback_submit_button">Provide Feedback</button>
-        </div><!-- /.form-group -->
-      </form>
-    </div><!-- /#.feedback-area -->
 </div><!-- /.container -->
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
