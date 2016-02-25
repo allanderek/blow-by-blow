@@ -27,7 +27,7 @@ def coffeelint():
 
 @manager.command
 def coffeebuild():
-    return run_command('coffee -c -o app/static/compiled-js app/coffee')
+    return run_command('coffee -cb -o app/static/compiled-js app/coffee')
 
 
 def run_with_test_server(test_command, coverage):

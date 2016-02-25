@@ -21,7 +21,7 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 15
+  numTests: 18
 
   feed_title: 'Red Team vs Blue Team'
   feed_description: 'My commentary on the Red vs Blue match'
@@ -59,12 +59,13 @@ class NormalFunctionalityTest
     # We would really like to do the viewing in a second window but that seems
     # at best non-trivial in casperJS, and perhaps impossible. So for the
     # time-being we just use the one window.
-    casper.thenOpen (@get_url 'current'), =>
+    casper.thenOpen (@get_url 'current'), ->
       feed_url = expected_viewer_feed_url
       feed_link_selector = "a[href$=\"#{feed_url}\"]"
       test.assertExists feed_link_selector
-      #Save the csrf_token for later use
-      @csrf_token = casper.getElementAttribute '#update-controls input#csrf_token', 'value'
+      # Save the csrf_token for later use (that later use is not working yet)
+      # csrf_selector = '#update-controls input#csrf_token'
+      # @csrf_token = casper.getElementAttribute csrf_selector, 'value'
       casper.click feed_link_selector
     casper.then =>
       @check_author_controls test, false, expected_viewer_feed_url
@@ -135,12 +136,9 @@ class NormalFunctionalityTest
     casper.fillSelectors '#make-moment', ('#moment_text': moment_text), true
 
   check_moments: (test, expected_moment_texts) ->
-    # casper.fetchTexts returns the concatenated string of all the texts
-    # from all the elements matching the given selector.
-    # actual_moments = casper.fetchText '#feed-moment-list li .moment-text'
-    # test.assertEqual actual_moments, (expected_moment_texts.join())
-    test.assertSelectorHasText '#feed-moment-list li .moment-text',
-      (expected_moment_texts.join('')), 'Checking moments in feed.'
+    for moment in expected_moment_texts
+      test.assertSelectorHasText '#feed-moment-list li .moment-text', moment,
+                                 'Checking moments in feed.'
 
   check_flashed_message: (test, expected_message, category) ->
     selector = "div.alert.alert-#{category}"

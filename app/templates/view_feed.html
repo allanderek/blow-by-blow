@@ -57,7 +57,7 @@
         private link to author the feed. Send viewers here:
         <a class="alert-link" href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
     </p>
-</div><!-- /#send-viewers-link-instructions --> 
+</div><!-- /#send-viewers-link-instructions -->
 <div id="send-viewers-link" class="alert alert-success alert-dismissible" role="alert">
   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
   <strong>Viewer's link: </strong><a class="alert-link" href="{{db_feed.viewers_link}}">{{db_feed.viewers_link}}</a>
@@ -119,7 +119,7 @@ Feed is refreshing
 <button onclick="javascript:refresh_feed('{{ db_feed.id }}');"
         class="btn btn-default"
         id="refresh-feed-button">Refresh Feed</button>
-<button onclick="javascript:toggle_feed_direction();"
+<button onclick="javascript:toggle_feed_direction('{{db_feed.id}}');"
         class="btn btn-default"
         id="feed-direction-button">Toggle Feed Direction</button>
 
@@ -129,51 +129,8 @@ Feed is refreshing
 
 {% endblock %} <!-- main_contents -->
 {% block page_scripts %}
+<script src="/static/compiled-js/feed.js"></script>
 <script>
-var earliest_first = false;
-function refresh_feed(feed_id) {
-    $("#refreshing-feed").show();
-    $.post('/grabmoments', {
-        feed_id: feed_id
-    }).done(function(translated) {
-        $(".feed-title").text(translated['title']);
-        $(".feed-description").text(translated['description']);
-        $(".feed-moment").remove();
-        var moments = translated['moments'];
-        for (i = 0; i < moments.length; i++) {
-          moment = moments[i];
-	  moment_li = document.createElement('li');
-	  moment_li.className = "feed-moment list-group-item";
-          time_div = document.createElement('div');
-	  time_div.className = "moment-time";
-          time_div.innerHTML = moment['time']
-          text_div = document.createElement('div');
-          text_div.className = "moment-text";
-	  text_div.innerHTML = moment['content'];
-          moment_li.appendChild(time_div);
-	  moment_li.appendChild(text_div);
-	  if (earliest_first){
-              $("#feed-moment-list").append(moment_li);
-          } else {
-              $("#feed-moment-list").prepend(moment_li);
-          }
-	}
-        $("#refreshing-feed").hide();
-    }).fail(function() {
-        $("#refreshing-feed").text("Error: Could not contact server.");
-    });
-    /* Now update the text which allows the user to toggle the feed direction */
-    var toggle_button_text = "Show earliest first";
-    if (earliest_first){
-       toggle_button_text = "Show latest first";
-    }
-    $('#feed-direction-button').text(toggle_button_text);
-}
-function toggle_feed_direction(){
-  earliest_first = !earliest_first;
-  refresh_feed({{db_feed.id}});
-}
-
 jQuery(document).ready(function(){
   refresh_feed({{db_feed.id}});
 });
