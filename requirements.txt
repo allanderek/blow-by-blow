@@ -14,6 +14,7 @@ Werkzeug==0.10.4
 alembic==0.8.2
 autopep8==1.2.1
 blinker==1.4
+coverage==4.0.3
 decorator==4.0.4
 flake8==2.5.0
 importmagic==0.1.3

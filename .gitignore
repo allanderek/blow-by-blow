@@ -1,5 +1,6 @@
 *~
 db.sqlite3
+db.sqlite
 __pycache__
 *.pyc
 *.swn
@@ -8,7 +9,7 @@ __pycache__
 *.egg-info
 .coverage
 htmlcov
-venv/
+venv*/
 *-venv/
 app/.cache
 
