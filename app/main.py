@@ -30,7 +30,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Configuration(object):
     SECRET_KEY = b'7a\xe1f\x17\xc9C\xcb*\x85\xc1\x95G\x97\x03\xa3D\xd3F\xcf\x03\xf3\x99>'  # noqa
     LIVE_SERVER_PORT = 5000
-    database_file = os.path.join(basedir, '../../db.sqlite')
+    database_file = os.path.join(basedir, '../db.sqlite')
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + database_file
     DOMAIN = os.environ.get('BLOWBYBLOW_DOMAIN', 'localhost')
 
@@ -296,8 +296,14 @@ def give_feedback():
 # Now for some testing.
 import urllib
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 import pytest
+# Currently just used for the temporary hack to quit the phantomjs process
+# see below in quit_driver.
+import signal
 
 
 class BasicFunctionalityTests(object):  #pragma: no cover
@@ -309,7 +315,15 @@ class BasicFunctionalityTests(object):  #pragma: no cover
         self.driver.set_window_size(1120, 550)
 
     def quit_driver(self):
+        self.driver.close()
+        # A bit of hack this but currently there is some bug I believe in
+        # the phantomjs code rather than selenium, but in any case it means that
+        # the phantomjs process is not being killed so we do so explicitly here
+        # for the time being. Obviously we can remove this when that bug is
+        # fixed. See: https://github.com/SeleniumHQ/selenium/issues/767
+        self.driver.service.process.send_signal(signal.SIGTERM)
         self.driver.quit()
+
 
     def get_url(self, local_url):
         # Obviously this is not the same application instance as the running
@@ -387,6 +401,20 @@ class BasicFunctionalityTests(object):  #pragma: no cover
             for e in elements:
                 print(e.text)
         assert any(message in e.text for e in elements)
+
+    def wait_for_feed_refresh_count(self, count):
+        def check_feed_count(driver):
+            script = 'return feed_successfully_updated;'
+            feed_count = driver.execute_script(script)
+            return feed_count == count
+        WebDriverWait(self.driver, 5).until(check_feed_count)
+
+    def wait_for_element_to_be_clickable(self, selector):
+        wait = WebDriverWait(self.driver, 5)
+        element_spec = (By.CSS_SELECTOR, selector)
+        condition = expected_conditions.element_to_be_clickable(element_spec)
+        element = wait.until(condition)
+        return element
 
     update_header_button_css = '#update-feed-header-button'
     add_moment_submit_button_css = '#add-moment-button'
@@ -471,6 +499,7 @@ class BasicFunctionalityTests(object):  #pragma: no cover
         self.driver.switch_to_window(viewer_window_handle)
         refresh_feed_css = '#refresh-feed-button'
         self.click_element_with_css(refresh_feed_css)
+        self.wait_for_feed_refresh_count(3)
         self.check_moment_order([first_moment,
                                  second_moment, third_moment])
 
@@ -492,10 +521,15 @@ class BasicFunctionalityTests(object):  #pragma: no cover
         # that the moment does not exist.
         self.driver.switch_to_window(viewer_window_handle)
         self.click_element_with_css(refresh_feed_css)
+        self.wait_for_feed_refresh_count(4)
         self.check_moment_does_not_exist(failed_moment)
 
     def test_feedback(self):
         self.driver.get(self.get_url('/'))
+        elements = self.driver.find_elements_by_css_selector('a#feedback-link')
+        self.wait_for_element_to_be_clickable('a#feedback-link')
+        self.click_element_with_css('#feedback-link')
+        self.wait_for_element_to_be_clickable('#feedback_submit_button')
         feedback = {'#feedback_email': "example_user@example.com",
                     '#feedback_name': "Avid User",
                     '#feedback_text': "I hope your feedback form works."}
@@ -523,8 +557,8 @@ def test_our_server():  #pragma: no cover
     try:
         basic.test_server_is_up_and_running()
         basic.test_frontpage_links()
-        basic.test_create_feed()
         basic.test_feedback()
+        basic.test_create_feed()
     finally:
         basic.driver.get(basic.get_url('shutdown'))
         basic.quit_driver()

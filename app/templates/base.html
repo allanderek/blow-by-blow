@@ -47,7 +47,7 @@ body {
                 <a href="{{ url_for('current_feeds')}}">Current Feeds</a></li>
             <li {% if active_page == 'start_feed' %} class="active"{% endif%}>
                 <a href="{{url_for('start_feed')}}">Start a New Feed</a></li>
-            <li><a href="#" data-toggle="modal" data-target="#feedback-modal">Give Feedback</a></li>
+            <li><a href="#" id="feedback-link" data-toggle="modal" data-target="#feedback-modal">Give Feedback</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div><!-- /.container -->

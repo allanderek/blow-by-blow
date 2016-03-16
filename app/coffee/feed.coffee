@@ -1,4 +1,5 @@
 earliest_first = false
+feed_successfully_updated = 0
 
 receive_moments = (data) ->
   $(".feed-title").text data['title']
@@ -18,6 +19,7 @@ receive_moments = (data) ->
     else
       $("#feed-moment-list").prepend moment_li
   $("#refreshing-feed").hide()
+  feed_successfully_updated += 1
 
 refresh_feed = (feed_id) ->
   $("#refreshing-feed").show()
