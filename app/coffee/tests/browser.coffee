@@ -41,7 +41,7 @@ class NormalFunctionalityTest
       @check_author_controls test, true, expected_viewer_feed_url
       # Give the feed a title
       casper.fillSelectors '#update-feed', ('#title_text': @feed_title), true
-    casper.then =>
+    casper.waitForText @feed_title, =>
       @check_feed_title test, @feed_title
       # Give the feed a description, note that we could fill in
       # both the title and the description and *then* click update,
@@ -54,7 +54,7 @@ class NormalFunctionalityTest
       @add_moment @first_moment
     casper.then =>
       @add_moment @second_moment
-    casper.then =>
+    casper.waitForText @second_moment, =>
       @check_moments test, [@second_moment, @first_moment]
     # We would really like to do the viewing in a second window but that seems
     # at best non-trivial in casperJS, and perhaps impossible. So for the
