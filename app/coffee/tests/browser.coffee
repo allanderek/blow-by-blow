@@ -29,6 +29,14 @@ class NormalFunctionalityTest
   second_moment: "We're into the second minute."
   third_moment: "A booking in the third minute."
 
+  run: =>
+    casper.test.begin @description, @numTests, (test) =>
+      casper.start()
+      @testBody(test)
+      casper.then ->
+        test.done()
+
+
   testBody: (test) ->
     url = @get_url 'startfeed'
     author_url = null
@@ -145,19 +153,10 @@ class NormalFunctionalityTest
     test.assertSelectorHasText selector, expected_message,
       'Checking flashed message'
 
-runTestClass = (testClass) ->
-  casper.test.begin testClass.description, testClass.numTests, (test) ->
-    casper.start()
-    testClass.testBody(test)
-    casper.run ->
-      test.done()
 
-runTestClass (new NormalFunctionalityTest)
+test_classes = [new NormalFunctionalityTest]
+for test in test_classes
+  test.run()
 
-casper.test.begin 'The shutdown test', 0, (test) ->
-  casper.start()
-  casper.then () ->
-    casper.echo 'Shutting down ...'
-  casper.run ->
-    casper.echo 'Shutdown'
-    test.done()
+casper.run ->
+  casper.log "tests concluded ..."
