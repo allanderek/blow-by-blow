@@ -156,7 +156,7 @@ runTestClass (new NormalFunctionalityTest)
 
 casper.test.begin 'The shutdown test', 0, (test) ->
   casper.start()
-  casper.thenOpen 'http://localhost:5000/shutdown', method: 'post', ->
+  casper.then () ->
     casper.echo 'Shutting down ...'
   casper.run ->
     casper.echo 'Shutdown'

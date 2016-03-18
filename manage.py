@@ -3,6 +3,7 @@ import os
 import flask
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
+import requests
 
 from app.main import application, database
 
@@ -30,7 +31,7 @@ def coffeebuild():
     return run_command('coffee -cb -o app/static/compiled-js app/coffee')
 
 
-def run_with_test_server(test_command, coverage):
+def run_with_test_server(test_commands, coverage):
     """Run the test server and the given test command in parallel. If 'coverage'
     is True, then we run the server under coverage analysis and produce a
     coverge report."""
@@ -44,39 +45,57 @@ def run_with_test_server(test_command, coverage):
     for line in server.stderr:
         if line.startswith(b' * Running on'):
             break
-    test_process = subprocess.Popen(test_command)
-    test_process.wait(timeout=60)
-    server_return_code = server.wait(timeout=60)
+    
+    test_return_code = 0
+    for test_command in test_commands:
+        test_process = subprocess.Popen(test_command)
+        test_return_code += test_process.wait(timeout=20)
+    # Once all test processes has completed we can shutdown the server. To do so
+    # we have to make a request so that the server process can shut down
+    # cleanly, and in particular finalise coverage analysis.
+    # We could check the return from this is success.
+    requests.post('http://localhost:5000/shutdown')
+    test_return_code = server.wait(timeout=20)
     if coverage:
         os.system("coverage report -m")
         os.system("coverage html")
-    return server_return_code
+    return test_return_code
+
 
 @manager.command
 def test_casper(nocoverage=False):
     """Run the casper test suite with or without coverage analysis."""
-    if coffeebuild():
-        print("Coffee script failed to compile, exiting test!")
-        return 1
-    js_test_file = "app/static/compiled-js/tests/browser.js"
-    casper_command = ["casperjs", "test", js_test_file]
-    return run_with_test_server(casper_command, not nocoverage)
+    return test(nocoverage=nocoverage, testname='casper')
 
 
 @manager.command
 def test_main(nocoverage=False):
     """Run the python only tests within py.test app/main.py we still run
     the test server in parallel and produce a coverage report."""
-    test_command = ['py.test', 'app/main.py']
-    return run_with_test_server(test_command, not nocoverage)
+    return test(nocoverage=nocoverage, testname='main')
 
 
 @manager.command
-def test():
-    casper_result = test_casper()
-    main_result = test_main()
-    return max([casper_result, main_result])
+def test(nocoverage=False, testname=None):
+    if coffeebuild():
+        print("Coffee script failed to compile, exiting test!")
+        return 1
+    
+    test_main_command = ['py.test', 'app/main.py']
+    casper_test_command = ["casperjs", "test", 
+                           "app/static/compiled-js/tests/browser.js"]
+    
+    if testname is None:
+        commands = [test_main_command, casper_test_command]
+    elif testname == 'casper':
+        commands = [casper_test_command]
+    elif testname == 'main':
+        commands = [test_main_command]
+    else:
+        print('Name of test unknown')
+        return 1
 
+    return run_with_test_server(commands, not nocoverage)
 
 def shutdown():
     """Shutdown the Werkzeug dev server, if we're using it.

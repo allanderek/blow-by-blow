@@ -560,7 +560,6 @@ def test_our_server():  #pragma: no cover
         basic.test_feedback()
         basic.test_create_feed()
     finally:
-        basic.driver.get(basic.get_url('shutdown'))
         basic.quit_driver()
 
 if __name__ == "__main__":
