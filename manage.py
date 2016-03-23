@@ -134,6 +134,15 @@ def test(nocoverage=False, coverage_erase=True):
         print('Casper test failure!')
     return casper_result
 
+@manager.command
+def cloud9():
+    """When you run this command you should be able to view the running web app
+    either by "Preview->Preview Running Application", or by visiting:
+    `<worksapce>-<username>.c9users.io/` which you can get to by doing the above
+    preview and then clicking to pop-out to a new window."""
+    return run_command('python manage.py runserver -h 0.0.0.0 -p 8080')
+
+
 
 def shutdown():
     """Shutdown the Werkzeug dev server, if we're using it.
