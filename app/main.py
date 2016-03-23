@@ -85,12 +85,23 @@ class DBMoment(database.Model):
                 'content': self.content}
 
 
-def create_database_feed():
+def create_database_feed(form):
     """ Create a feed in the database. """
-    dbfeed = DBFeed()
-    database.session.add(dbfeed)
+    db_feed = DBFeed()
+    database.session.add(db_feed)
+    
+    new_title = form.title_text.data.lstrip()
+    new_description = form.desc_text.data.lstrip()
+    moment_text = form.moment_text.data.lstrip()
+    if new_title:
+        db_feed.feed_title = new_title
+    if new_description:
+        db_feed.feed_desc = new_description
+    if moment_text:
+        moment = DBMoment(db_feed.id, moment_text)
+        database.session.add(moment)
     database.session.commit()
-    return dbfeed
+    return db_feed
 
 
 @application.template_test('plural')
@@ -146,15 +157,28 @@ def current_feeds():
     return render_template('current_feeds.html', db_feeds=db_feeds)
 
 
-@application.route('/startfeed')
+@application.route('/startfeed', methods=('GET', 'POST'))
 def start_feed():
-    # TODO: The only thing about this is, that I don't really want
-    # people accidentally refreshing and starting multiple feeds, so I
-    # guess I want this to only accept POST?
-    db_feed = create_database_feed()
-    url = flask.url_for('view_feed', feed_no=db_feed.id,
-                        secret=db_feed.author_secret)
-    return flask.redirect(url)
+    form = UpdateFeedForm()
+    if flask.request.method == 'POST':
+        if form.validate_on_submit():
+            db_feed = create_database_feed(form)
+            url = flask.url_for('view_feed', feed_no=db_feed.id,
+                                secret=db_feed.author_secret)
+            return flask.redirect(url)
+        else:
+            message = """Your new feed form failed to validate.
+                      <strong>Sorry</strong> it's almost certainly my fault.
+                      You can try again.
+                      """
+            flask.flash(flask.Markup(message), 'error')
+    elif flask.request.method != 'GET':
+        message = """<strong>Sorry</strong> your request to create a new feed
+                  somehow managed to generate an invalid request method. It is
+                  probably my fault, you can try again.
+                  """
+        flask.flash(flask.Markup(message), 'error')
+    return render_template('create_feed.html', form=form)
 
 
 class UpdateFeedForm(flask_wtf.Form):

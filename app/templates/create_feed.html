@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% set active_page = "start_feed" %}
+{% block main_content %}
+<form id="create-feed-form" method="POST" action="{{ url_for('start_feed') }}" class="form-group">
+    {{ form.hidden_tag() }}
+    {{ form.title_text(placeholder="Feed Title (don't worry you can change this later)", class="form-control") }}
+    {{ form.desc_text(placeholder="Feed Description (similarly can be changed later)", class="form-control") }}
+      <button type="submit"
+              class="form-control btn btn-default"
+              id="start-feed-header-button"
+              name="start-feed-header-button">Create Feed</button>
+</form>
+{% endblock main_content %}
