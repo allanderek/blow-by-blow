@@ -306,7 +306,7 @@ import pytest
 import signal
 
 
-class BasicFunctionalityTests(object):  #pragma: no cover
+class BasicFunctionalityTests(object):
     """Basic functionality test. This requires a running server as it does not
     start one itself. See the 'manage.py' file how this is run.
     """

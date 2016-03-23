@@ -4,6 +4,7 @@ import flask
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 import requests
+import subprocess
 
 from app.main import application, database
 
@@ -31,71 +32,108 @@ def coffeebuild():
     return run_command('coffee -cb -o app/static/compiled-js app/coffee')
 
 
-def run_with_test_server(test_commands, coverage):
+def coverage_command(command_args, coverage, accumulate):
+    """The `accumulate` argument specifies whether we should add to the existing
+    coverage data or wipe that and start afresh. Generally you wish to
+    accumulate if you need to run multiple commands and you want the coverage
+    analysis relevant to all those commands. So, for the commands we specify
+    below this is usually off by default, since if you are running coverage on
+    a particular test command then presumably you only wish to know about that
+    command. However, for the main 'test' command, we want to accumulte the
+    coverage results for both the casper and unit tests, hence in our 'test'
+    command below we supply 'accumulate=True' for the sub-commands test_casper
+    and run_unittests.
+    """
+    
+    # No need to specify the sources, this is done in the .coveragerc file.
+    if coverage:
+        command = ["coverage", "run"]
+        if accumulate:
+            command.append("-a")
+        return command + command_args
+    else:
+        return ['python'] + command_args
+    
+def run_with_test_server(test_command, coverage, accumulate):
     """Run the test server and the given test command in parallel. If 'coverage'
     is True, then we run the server under coverage analysis and produce a
-    coverge report."""
-    import subprocess
-    coverage_prefix = ["coverage", "run", "--source", "app.main"]
-    server_command_prefx = coverage_prefix if coverage else ['python']
-    server_command = server_command_prefx + ["manage.py", "run_test_server"]
+    coverge report.
+    """
+    # Note, if we start running Selenium tests again, then we should have,
+    # rather than a single 'test_command' a series of 'test_commands'. Then
+    # we start the server and *then* run each of the test commands, that way
+    # we will get the combined coverage of all the test commands, for example
+    # selenium + capserJS tests.
+    server_command_args = ["manage.py", "run_test_server"]
+    server_command = coverage_command(server_command_args, coverage, accumulate)
     server = subprocess.Popen(server_command, stderr=subprocess.PIPE)
     # TODO: If we don't get this line we should  be able to detect that
     # and avoid the starting test process.
     for line in server.stderr:
-        if line.startswith(b' * Running on'):
+        if b' * Running on' in line:
             break
-    
-    test_return_code = 0
-    for test_command in test_commands:
-        test_process = subprocess.Popen(test_command)
-        test_return_code += test_process.wait(timeout=20)
-    # Once all test processes has completed we can shutdown the server. To do so
+    test_process = subprocess.Popen(test_command)
+    test_return_code = test_process.wait(timeout=60)
+    # Once the test process has completed we can shutdown the server. To do so
     # we have to make a request so that the server process can shut down
     # cleanly, and in particular finalise coverage analysis.
     # We could check the return from this is success.
     requests.post('http://localhost:5000/shutdown')
-    test_return_code = server.wait(timeout=20)
+    server_return_code = server.wait(timeout=60)
     if coverage:
         os.system("coverage report -m")
         os.system("coverage html")
-    return test_return_code
+    return test_return_code + server_return_code
 
 
 @manager.command
-def test_casper(nocoverage=False):
+def test_casper(name=None, coverage=False, accumulate=False):
     """Run the casper test suite with or without coverage analysis."""
-    return test(nocoverage=nocoverage, testname='casper')
-
-
-@manager.command
-def test_main(nocoverage=False):
-    """Run the python only tests within py.test app/main.py we still run
-    the test server in parallel and produce a coverage report."""
-    return test(nocoverage=nocoverage, testname='main')
-
-
-@manager.command
-def test(nocoverage=False, testname=None):
     if coffeebuild():
         print("Coffee script failed to compile, exiting test!")
         return 1
-    
-    test_main_command = ['py.test', 'app/main.py']
-    casper_test_command = ["casperjs", "test", 
-                           "app/static/compiled-js/tests/browser.js"]
-    
-    if testname is None:
-        commands = [test_main_command, casper_test_command]
-    elif testname == 'casper':
-        commands = [casper_test_command]
-    elif testname == 'main':
-        commands = [test_main_command]
-    else:
-        print('Name of test unknown')
-        return 1
+    js_test_file = "app/static/compiled-js/tests/browser.js"
+    casper_command = ["./node_modules/.bin/casperjs", "test", js_test_file]
+    if name is not None:
+        casper_command.append('--single={}'.format(name))
+    return run_with_test_server(casper_command, coverage, accumulate)
 
-    return run_with_test_server(commands, not nocoverage)
+@manager.command
+def test_main(name=None, coverage=False, accumulate=True):
+    """Run the casper test suite with or without coverage analysis."""
+    # Unlike in casper we run coverage on this command as well, however we need
+    # to accumulate if we want this to work at all, because we need to
+    # accumulate the coverage results of the server process as well as the
+    # pytest process itself. We do this because we want to make sure that the
+    # tests themselves don't contain dead code. So it almost never makes sense
+    # to run `test_main` with `coverage=True` but `accumulate=False`.
+    pytest_command = coverage_command(['-m', 'pytest', 'app/main.py'],
+                                      coverage, accumulate)
+    if name is not None:
+        pytest_command.append('--k={}'.format(name))
+    return run_with_test_server(pytest_command, coverage, accumulate)
+
+
+@manager.command
+def test(nocoverage=False, coverage_erase=True):
+    """ Run both the casperJS and all the unittests. We do not bother to run
+    the capser tests if the unittests fail. By default this will erase any
+    coverage-data accrued so far, you can avoid this, and thus get the results
+    for multiple runs by passing `--coverage_erase=False`"""
+    if coverage_erase:
+        os.system('coverage erase')
+    coverage = not nocoverage
+    unit_result = test_main(coverage=coverage, accumulate=True)
+    if unit_result:
+        print('Unit test failure!')
+        return unit_result
+    casper_result = test_casper(coverage=coverage,  accumulate=True)
+    if not casper_result:
+        print('All tests passed!')
+    else:
+        print('Casper test failure!')
+    return casper_result
+
 
 def shutdown():
     """Shutdown the Werkzeug dev server, if we're using it.
