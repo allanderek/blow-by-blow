@@ -89,7 +89,7 @@ def create_database_feed(form):
     """ Create a feed in the database. """
     db_feed = DBFeed()
     database.session.add(db_feed)
-    
+
     new_title = form.title_text.data.lstrip()
     new_description = form.desc_text.data.lstrip()
     moment_text = form.moment_text.data.lstrip()
@@ -464,19 +464,30 @@ class BasicFunctionalityTests(object):
 
     def test_create_feed(self):
         self.driver.get(self.get_url('startfeed'))
+
+        title = 'Blue Team vs Red Team'
+        description_text = 'My commentary on the Blue vs Red match.'
+        self.fill_in_and_submit_form({'#title_text': title,
+                                      '#desc_text': description_text},
+                                      '#start-feed-header-button')
+
         author_url = self.driver.current_url
         url_fields = author_url.split('/')
         feed_id = url_fields[url_fields.index('viewfeed') + 1]
         expected_viewer_feed_url = '/viewfeed/' + feed_id
         self.check_author_controls(True, expected_viewer_feed_url)
 
-        # Give the feed a title
+        # Check the original title and description are correct
+        self.check_feed_title(title)
+        self.check_feed_description(description_text)
+
+        # Give the feed a new title
         title = 'Red Team vs Blue Team'
         self.fill_in_and_submit_form({'#title_text': title},
                                      self.update_header_button_css)
         self.check_feed_title(title)
 
-        # Give the feed a description, note that we could fill in
+        # Give the feed a new description, note that we could fill in
         # both the title and the description and *then* click update,
         # but we're doing it as two separate POSTs.
         description_text = "My commentary on the Red vs Blue match."

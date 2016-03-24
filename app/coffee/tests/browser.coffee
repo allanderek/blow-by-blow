@@ -21,8 +21,10 @@ debug_dump_html = () ->
 class NormalFunctionalityTest
   names: ['NormalFunctionality']
   description: "Tests the normal functionality of authoring and viewing feeds"
-  numTests: 18
+  numTests: 20
 
+  original_title: 'Original title'
+  original_description: 'Original description'
   feed_title: 'Red Team vs Blue Team'
   feed_description: 'My commentary on the Red vs Blue match'
   first_moment: 'Match has kicked off, it is raining.'
@@ -38,10 +40,17 @@ class NormalFunctionalityTest
 
 
   testBody: (test) ->
-    url = @get_url 'startfeed'
     author_url = null
     expected_viewer_feed_url = null
-    casper.thenOpen url, =>
+    casper.thenOpen (@get_url 'startfeed'), =>
+      form_data =
+         '#title_text': @original_title
+         '#desc_text': @original_description
+      casper.fillSelectors '#create-feed-form', form_data, true
+      debug_dump_html()
+    casper.waitForText @original_title, =>
+      @check_feed_title test, @original_title
+      @check_feed_description test, @original_description
       author_url = casper.getCurrentUrl()
       fields = author_url.split "/"
       feed_id = fields[4]
